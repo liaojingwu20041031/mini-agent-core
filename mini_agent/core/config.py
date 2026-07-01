@@ -8,14 +8,20 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from mini_agent.adapters.providers import get_provider_preset
+
 
 @dataclass
 class AppConfig:
-    llm_base_url: str = "https://api.openai.com/v1"
+    llm_provider: str = "deepseek"
+    llm_region: str = ""
+    llm_base_url: str = ""
     llm_api_key: str = ""
-    llm_model: str = "gpt-4o-mini"
+    llm_model: str = ""
     llm_timeout: float = 30
     llm_temperature: float = 0.2
+    llm_extra_body_json: str = ""
+    llm_enable_thinking: bool = False
     agent_max_steps: int = 5
     voice_stt_provider: str = "dummy"
     voice_tts_provider: str = "dummy"
@@ -25,11 +31,15 @@ class AppConfig:
 
 
 ENV_MAP = {
+    "LLM_PROVIDER": "llm_provider",
+    "LLM_REGION": "llm_region",
     "LLM_BASE_URL": "llm_base_url",
     "LLM_API_KEY": "llm_api_key",
     "LLM_MODEL": "llm_model",
     "LLM_TIMEOUT": "llm_timeout",
     "LLM_TEMPERATURE": "llm_temperature",
+    "LLM_EXTRA_BODY_JSON": "llm_extra_body_json",
+    "LLM_ENABLE_THINKING": "llm_enable_thinking",
     "AGENT_MAX_STEPS": "agent_max_steps",
     "VOICE_STT_PROVIDER": "voice_stt_provider",
     "VOICE_TTS_PROVIDER": "voice_tts_provider",
@@ -81,6 +91,17 @@ def _load_simple_yaml(path: Path) -> dict[str, Any]:
     return data
 
 
+def parse_extra_body(config: AppConfig) -> dict[str, Any]:
+    """Parse provider-specific extra JSON body from config."""
+
+    extra: dict[str, Any] = {}
+    if config.llm_extra_body_json:
+        extra.update(json.loads(config.llm_extra_body_json))
+    if config.llm_enable_thinking:
+        extra.setdefault("thinking", {"type": "enabled"})
+    return extra
+
+
 def load_config(config_path: str | Path | None = None, env_path: str | Path = ".env") -> AppConfig:
     config = AppConfig()
     file_values: dict[str, Any] = {}
@@ -100,5 +121,12 @@ def load_config(config_path: str | Path | None = None, env_path: str | Path = ".
             raw_value = merged_env[env_key]
         if raw_value is not None:
             setattr(config, attr, _coerce(raw_value, getattr(config, attr)))
-    return config
 
+    preset = get_provider_preset(config.llm_provider, config.llm_region)
+    if not config.llm_base_url:
+        config.llm_base_url = preset.base_url
+    if not config.llm_model:
+        config.llm_model = preset.default_model
+    if not config.llm_api_key:
+        config.llm_api_key = merged_env.get(preset.api_key_env, "")
+    return config
