@@ -1,6 +1,18 @@
 profiles:
   local:
     servers: {}
+  qwen:
+    servers: {}
+  deepseek:
+    servers: {}
+  kimi:
+    servers: {}
+  glm:
+    servers: {}
+  siliconflow:
+    servers: {}
+  remote:
+    servers: {}
   minimal:
     servers: {}
   online:

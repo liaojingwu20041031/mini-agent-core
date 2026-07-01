@@ -34,6 +34,24 @@ profiles:
         adapter: dummy
       tts:
         adapter: dummy
+  kimi:
+    roles:
+      main:
+        provider: kimi
+        model: kimi-k2.6
+      stt:
+        adapter: dummy
+      tts:
+        adapter: dummy
+  glm:
+    roles:
+      main:
+        provider: glm
+        model: glm-4.5
+      stt:
+        adapter: dummy
+      tts:
+        adapter: dummy
   siliconflow:
     roles:
       main:

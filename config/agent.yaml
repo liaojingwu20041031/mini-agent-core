@@ -6,6 +6,8 @@ profiles:
     system_prompt: You are a helpful lightweight AI agent.
   qwen: *default_agent
   deepseek: *default_agent
+  kimi: *default_agent
+  glm: *default_agent
   siliconflow: *default_agent
   remote: *default_agent
   edge: *default_agent

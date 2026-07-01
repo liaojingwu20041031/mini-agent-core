@@ -1,6 +1,6 @@
 # 配置指南
 
-`mini-agent-core` 的配置目标是：国内 AI 服务开箱可选、模型选择必须显式、密钥不进仓库、MCP 和危险工具默认关闭。
+`mini-agent-core` 的配置目标是：国内 AI 服务开箱可选、模型选择必须显式、密钥不进仓库、MCP 和危险工具默认关闭。当前版本统一使用 YAML profile；旧 `.env` / `LLM_*` 配置入口已经移除。
 
 ## 配置文件
 
@@ -40,6 +40,8 @@ profiles:
 - `local`：本地 OpenAI-compatible 服务，例如 Ollama、LM Studio、llama.cpp server、vLLM。
 - `qwen`：阿里云百炼 / DashScope。
 - `deepseek`：DeepSeek OpenAI-compatible API。
+- `kimi`：Moonshot Kimi。
+- `glm`：智谱 GLM。
 - `siliconflow`：硅基流动。
 - `remote`：OpenAI 远程文本、STT、TTS 示例。
 - `edge`：ARM / 嵌入式部署占位。
@@ -55,7 +57,7 @@ mini-agent config show --profile qwen
 
 ## Provider Preset
 
-内置 provider preset 提供连接元信息：`base_url`、API Key 环境变量、别名和示例模型。preset 不会替你选择生产模型，模型必须在 `models.yaml` 或 `.env` 中显式声明。
+内置 provider preset 提供连接元信息：`base_url`、API Key 环境变量、别名和示例模型。preset 不会替你选择生产模型，模型必须在 `models.yaml` 中显式声明。
 
 | Provider | 常用别名 | API Key 环境变量 | 默认 base_url |
 | --- | --- | --- | --- |
@@ -65,7 +67,7 @@ mini-agent config show --profile qwen
 | `glm` | `zhipu`, `bigmodel`, `zai` | `ZHIPUAI_API_KEY` | `https://open.bigmodel.cn/api/paas/v4` |
 | `siliconflow` | `sf`, `guiji`, `silicon` | `SILICONFLOW_API_KEY` | `https://api.siliconflow.cn/v1` |
 | `local` | `ollama`, `lmstudio`, `llama_cpp`, `vllm` | `LOCAL_LLM_API_KEY` | `http://localhost:11434/v1` |
-| `custom` | `compatible` | `LLM_API_KEY` | 由 `LLM_BASE_URL` 指定 |
+| `custom` | `compatible` | `CUSTOM_LLM_API_KEY` | 在 YAML 中显式配置 |
 
 查看当前 provider preset：
 
@@ -96,27 +98,45 @@ main:
   api_key_env: DEEPSEEK_API_KEY
 ```
 
-`.env.example` 只用于展示变量名；本地真实 `.env` 应该保持未提交。
+本项目不再提供 `.env.example`，也不再解析 `.env`。如果你习惯使用本地环境文件，可以由 shell、IDE 或外部工具自行加载环境变量；项目运行时只读取环境变量本身，不读取 `.env` 文件。
 
-## `.env` 兼容入口
+## 自定义 Provider
 
-旧项目或简单 demo 可以继续用 `.env`：
+自定义 OpenAI-compatible 服务请写入 YAML。推荐在 `providers.yaml` 增加 provider，再在 `models.yaml` 引用：
 
-```env
-LLM_PROVIDER=deepseek
-LLM_MODEL=deepseek-v4-flash
-DEEPSEEK_API_KEY=sk-...
-LLM_TIMEOUT=30
-LLM_TEMPERATURE=0.2
-LLM_EXTRA_BODY_JSON={"top_p":0.8}
-LLM_ENABLE_THINKING=false
+```yaml
+profiles:
+  my_profile:
+    providers:
+      my_gateway:
+        base_url: https://your-compatible-endpoint/v1
+        api_key_env: CUSTOM_LLM_API_KEY
+        aliases: [mygw]
+        example_models: [your-model-name]
 ```
 
-优先级要点：
+```yaml
+profiles:
+  my_profile:
+    roles:
+      main:
+        provider: my_gateway
+        model: your-model-name
+        timeout: 30
+        temperature: 0.2
+```
 
-- 显式 `LLM_BASE_URL` 优先于 provider preset 的 `base_url`。
-- `LLM_MODEL` 必须显式设置；provider preset 只给示例模型。
-- `LLM_API_KEY` 可用于 custom provider，国内厂商更推荐使用专属变量。
+也可以直接在 `models.yaml` 的角色里覆盖 `base_url`、`api_key_env`、`extra_body`：
+
+```yaml
+main:
+  provider: custom
+  base_url: https://your-compatible-endpoint/v1
+  api_key_env: CUSTOM_LLM_API_KEY
+  model: your-model-name
+  extra_body:
+    top_p: 0.8
+```
 
 ## 角色模型
 
@@ -163,5 +183,4 @@ profiles:
 2. 选择一个 profile，例如 `qwen`、`deepseek`、`local`。
 3. 设置对应环境变量，例如 `DASHSCOPE_API_KEY` 或 `DEEPSEEK_API_KEY`。
 4. 运行 `mini-agent config check --profile <name>`。
-5. 运行 `python examples/text_<provider>_demo.py` 或在代码中调用 `OpenAICompatibleClient.from_provider(...)`。
-
+5. 运行 `python examples/text_<provider>_demo.py`，或在代码中调用 `load_profile_config(...)` 和 `build_agent_from_profile(...)`。

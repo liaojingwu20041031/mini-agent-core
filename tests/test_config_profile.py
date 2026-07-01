@@ -36,6 +36,8 @@ def test_domestic_ai_profiles_load_success(monkeypatch):
     env_by_profile = {
         "qwen": "DASHSCOPE_API_KEY",
         "deepseek": "DEEPSEEK_API_KEY",
+        "kimi": "MOONSHOT_API_KEY",
+        "glm": "ZHIPUAI_API_KEY",
         "siliconflow": "SILICONFLOW_API_KEY",
     }
     for env_name in env_by_profile.values():

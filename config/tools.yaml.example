@@ -19,6 +19,12 @@ profiles:
   deepseek:
     enabled: [calculator, get_time_local, system_status, tool_list]
     allow_danger: false
+  kimi:
+    enabled: [calculator, get_time_local, system_status, tool_list]
+    allow_danger: false
+  glm:
+    enabled: [calculator, get_time_local, system_status, tool_list]
+    allow_danger: false
   siliconflow:
     enabled: [calculator, get_time_local, system_status, tool_list]
     allow_danger: false

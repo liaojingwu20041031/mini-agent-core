@@ -1,41 +1,20 @@
-"""Run a text chat demo with a configured OpenAI-compatible model."""
+"""Run a text chat demo from a profile config."""
 
-from mini_agent.adapters.openai_compatible import OpenAICompatibleClient
-from mini_agent.builtin_tools import register_builtin_tools
-from mini_agent.core.agent import Agent
-from mini_agent.core.config import load_config, parse_extra_body
-from mini_agent.core.guard import ToolGuard
-from mini_agent.core.tools import ToolRegistry
+import argparse
+
+from mini_agent.config.loader import load_profile_config
 from mini_agent.interaction.text_cli import TextCLI
-
-
-def confirm(name: str, arguments: dict) -> bool:
-    answer = input(f"Confirm tool {name} with {arguments}? [y/N] ").strip().lower()
-    return answer == "y"
+from mini_agent.models.factory import build_agent_from_profile
 
 
 def main() -> None:
-    config = load_config()
-    registry = ToolRegistry()
-    register_builtin_tools(registry)
-    llm = OpenAICompatibleClient.from_provider(
-        provider=config.llm_provider,
-        region=config.llm_region,
-        base_url=config.llm_base_url,
-        api_key=config.llm_api_key,
-        model=config.llm_model,
-        timeout=config.llm_timeout,
-        temperature=config.llm_temperature,
-        extra_body=parse_extra_body(config),
-    )
-    agent = Agent(
-        llm=llm,
-        tools=registry,
-        max_steps=config.agent_max_steps,
-        llm_timeout=config.llm_timeout,
-        guard=ToolGuard(confirm_callback=confirm, allow_danger=config.allow_danger_tools),
-    )
-    TextCLI(agent).run()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--profile", default="local")
+    parser.add_argument("--config-dir", default="config")
+    args = parser.parse_args()
+
+    config = load_profile_config(args.config_dir, args.profile)
+    TextCLI(build_agent_from_profile(config)).run()
 
 
 if __name__ == "__main__":

@@ -5,6 +5,10 @@ profiles:
     servers: {}
   deepseek:
     servers: {}
+  kimi:
+    servers: {}
+  glm:
+    servers: {}
   siliconflow:
     servers: {}
   remote:

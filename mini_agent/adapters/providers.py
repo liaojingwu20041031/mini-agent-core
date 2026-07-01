@@ -91,8 +91,8 @@ _register(
         name="custom",
         aliases=("compatible",),
         base_url="",
-        api_key_env="LLM_API_KEY",
-        note="User-provided OpenAI-compatible endpoint. Set LLM_BASE_URL and LLM_MODEL.",
+        api_key_env="CUSTOM_LLM_API_KEY",
+        note="User-provided OpenAI-compatible endpoint. Configure base_url and model in profile YAML.",
         example_models=(),
     )
 )

@@ -10,6 +10,10 @@ profiles:
     providers: {}
   deepseek:
     providers: {}
+  kimi:
+    providers: {}
+  glm:
+    providers: {}
   siliconflow:
     providers: {}
   remote:

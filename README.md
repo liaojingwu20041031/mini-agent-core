@@ -81,13 +81,13 @@ python examples/text_tool_demo.py
 
 ## 国内 AI 快速开始
 
-推荐使用 `config/*.yaml` profile 配置；旧 `.env` 入口仍可用，但必须显式设置 `LLM_MODEL`。Provider preset 只提供连接信息和示例模型，不会自动选择具体模型。
+统一使用 `config/*.yaml` profile 配置。旧 `.env` / `LLM_*` 兼容入口已经移除；模型、base_url、角色参数都从 profile 读取。Provider preset 只提供连接信息和示例模型，不会自动选择具体模型。
 
 这次配置优化的核心约定：
 
 - 国内 provider 优先：DeepSeek、千问 / DashScope、Kimi / Moonshot、GLM / 智谱、硅基流动、本地 OpenAI-compatible 服务都有 preset。
 - API Key 不写入 YAML，只通过 `api_key_env` 指向环境变量。
-- 模型名必须在 `models.yaml` 或 `.env` 显式声明，避免误用默认模型。
+- 模型名必须在 `models.yaml` 显式声明，避免误用默认模型。
 - `config show` 会隐藏真实 Key，只报告环境变量是否存在。
 - MCP、shell、filesystem、Playwright、危险工具默认保守关闭。
 
@@ -120,65 +120,38 @@ mini-agent config show --profile local
 
 更完整的配置说明见 [docs/configuration.md](docs/configuration.md)。
 
-## `.env` 示例
+## 实地测试配置
 
-DeepSeek：
+以千问为例：
 
-```env
-LLM_PROVIDER=deepseek
-DEEPSEEK_API_KEY=sk-...
-LLM_MODEL=deepseek-v4-flash
+```powershell
+$env:DASHSCOPE_API_KEY="sk-..."
+mini-agent config check --profile qwen
+python examples/text_qwen_demo.py
 ```
 
-千问 / 阿里云百炼 DashScope：
+以 DeepSeek 为例：
 
-```env
-LLM_PROVIDER=qwen
-DASHSCOPE_API_KEY=sk-...
-LLM_MODEL=qwen-plus
+```powershell
+$env:DEEPSEEK_API_KEY="sk-..."
+mini-agent config check --profile deepseek
+python examples/text_deepseek_demo.py
 ```
 
-Kimi / Moonshot：
-
-```env
-LLM_PROVIDER=kimi
-MOONSHOT_API_KEY=sk-...
-LLM_MODEL=kimi-k2.6
-```
-
-本地模型服务，例如 Ollama、LM Studio、llama.cpp server、vLLM：
-
-```env
-LLM_PROVIDER=local
-LLM_BASE_URL=http://localhost:11434/v1
-LLM_API_KEY=ollama
-LLM_MODEL=qwen2.5:7b
-```
-
-自定义 OpenAI-compatible 服务：
-
-```env
-LLM_PROVIDER=custom
-LLM_BASE_URL=https://your-compatible-endpoint/v1
-LLM_API_KEY=sk-...
-LLM_MODEL=your-model-name
-```
-
-如果厂商需要额外参数，可以使用：
-
-```env
-LLM_EXTRA_BODY_JSON={"top_p":0.8}
-LLM_ENABLE_THINKING=false
-```
-
-显式设置 `LLM_BASE_URL` 时，会优先使用你写的地址；模型名始终来自 `LLM_MODEL` 或 `config/models.yaml` 的角色配置。
+自定义 OpenAI-compatible 服务不再走环境变量覆盖 base_url。请在 `config/providers.yaml` 增加 provider，或在 `config/models.yaml` 的 `main` 角色直接写 `base_url`、`model`、`api_key_env`。
 
 ## 文本模式
 
-通用文本 CLI：
+通用文本 CLI，默认读取 `local` profile：
 
 ```bash
 python examples/text_chat_demo.py
+```
+
+切换 profile：
+
+```bash
+python examples/text_chat_demo.py --profile qwen
 ```
 
 厂商专用快捷示例：
@@ -240,22 +213,21 @@ registry.register(read_sensor)
 
 `confirm` 技能如 `set_mock_led`、`memory_write`、`file_write_sandbox` 必须在 `tools.yaml` 显式启用并通过 `ToolGuard` 确认。`danger` 技能如 `dangerous_shell`、`shell_exec` 默认不注册，必须显式启用且执行时设置 `ToolGuard(allow_danger=True)`。
 
-## 在代码中选择 Provider
+## 在代码中加载 Profile
+
+```python
+from mini_agent.config.loader import load_profile_config
+from mini_agent.models.factory import build_agent_from_profile
+
+config = load_profile_config("config", "qwen")
+agent = build_agent_from_profile(config)
+```
+
+需要更底层控制时，可以直接使用 OpenAI-compatible client：
 
 ```python
 from mini_agent.adapters.openai_compatible import OpenAICompatibleClient
 
-llm = OpenAICompatibleClient.from_provider(
-    provider="qwen",
-    api_key="sk-...",
-    model="qwen-plus",
-    timeout=30,
-)
-```
-
-也可以完全自定义：
-
-```python
 llm = OpenAICompatibleClient(
     base_url="http://localhost:11434/v1",
     api_key="ollama",

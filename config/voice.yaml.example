@@ -4,6 +4,8 @@ profiles:
     audio_output_device: ""
   qwen: {}
   deepseek: {}
+  kimi: {}
+  glm: {}
   siliconflow: {}
   remote: {}
   edge: {}
