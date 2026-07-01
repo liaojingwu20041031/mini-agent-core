@@ -96,6 +96,6 @@ def tool_list() -> list[str]:
         "config_get",
         "tool_list",
         "web_search",
-        "fetch_url_text",
+        "fetch_url_text_public",
         "weather_open_meteo",
     ]

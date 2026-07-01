@@ -44,6 +44,8 @@ class AgentRuntimeConfig:
 @dataclass
 class ToolsConfig:
     enabled: tuple[str, ...] = ()
+    toolpacks_enabled: tuple[str, ...] = ()
+    extensions: tuple[dict[str, Any], ...] = ()
     allow_danger: bool = False
 
 

@@ -1,59 +1,81 @@
 # 内置技能配置模板。
 # 复制为 config/tools.yaml 后使用。
 # 默认启用 safe 技能；confirm/danger 技能必须显式启用。
+# 新写法支持 ToolPack；旧的 enabled: [...] 仍然兼容。
 # 默认联网能力是本地 safe skill，不会启动 MCP server。
 #
 # 联网 safe skill：
 # - web_search：轻量无 Key 搜索，只返回搜索结果；免费页面解析稳定性不如商业搜索 API。
-# - fetch_url_text：抓取公开网页正文；默认禁止内网，建议只在 online profile 开。
+# - fetch_url_text_public：抓取公开网页正文；禁止内网，最大返回 4000 字。
 # - weather_open_meteo：Open-Meteo 免费天气查询，适合原型和非商业场景。
 #
 # MCP 搜索不是默认联网能力，只是高级扩展；见 config/mcp.yaml.example。
 profiles:
   minimal:
-    enabled: [calculator, get_time_local, system_status, tool_list]
+    toolpacks:
+      enabled: [builtin.basic]
+    tools:
+      enabled: [calculator, get_time_local, system_status, tool_list]
     allow_danger: false       # 风险：不要默认开启危险工具。
 
   local:
-    enabled:
-      - calculator
-      - unit_convert
-      - format_json
-      - summarize_text
-      - extract_key_points
-      - translate_text
-      - plan_task
-      - get_time_local
-      - system_status
-      - config_get
-      - tool_list
-      - web_search             # 默认联网：无 Key 搜索，只返回搜索结果。
-      - weather_open_meteo     # 默认联网：Open-Meteo 免费天气查询。
+    toolpacks:
+      enabled: [builtin.basic, builtin.text, builtin.web, builtin.weather, builtin.system]
+    tools:
+      enabled:
+        - calculator
+        - unit_convert
+        - format_json
+        - summarize_text
+        - extract_key_points
+        - translate_text
+        - plan_task
+        - get_time_local
+        - system_status
+        - config_get
+        - tool_list
+        - web_search             # 默认联网：无 Key 搜索，只返回搜索结果。
+        - fetch_url_text_public  # 默认联网：只抓取公开 http/https 文本。
+        - weather_open_meteo     # 默认联网：Open-Meteo 免费天气查询。
     allow_danger: false
 
   qwen:
-    enabled: [calculator, get_time_local, system_status, tool_list, web_search, weather_open_meteo]
+    tools:
+      enabled: [calculator, get_time_local, system_status, tool_list, web_search, weather_open_meteo]
     allow_danger: false
   deepseek:
-    enabled: [calculator, get_time_local, system_status, tool_list, web_search, weather_open_meteo]
+    tools:
+      enabled: [calculator, get_time_local, system_status, tool_list, web_search, weather_open_meteo]
     allow_danger: false
   kimi:
-    enabled: [calculator, get_time_local, system_status, tool_list, web_search, weather_open_meteo]
+    tools:
+      enabled: [calculator, get_time_local, system_status, tool_list, web_search, weather_open_meteo]
     allow_danger: false
   glm:
-    enabled: [calculator, get_time_local, system_status, tool_list, web_search, weather_open_meteo]
+    tools:
+      enabled: [calculator, get_time_local, system_status, tool_list, web_search, weather_open_meteo]
     allow_danger: false
   siliconflow:
-    enabled: [calculator, get_time_local, system_status, tool_list, web_search, weather_open_meteo]
+    tools:
+      enabled: [calculator, get_time_local, system_status, tool_list, web_search, weather_open_meteo]
     allow_danger: false
   remote:
-    enabled: [calculator, get_time_local, system_status, tool_list, web_search, weather_open_meteo]
+    tools:
+      enabled: [calculator, get_time_local, system_status, tool_list, web_search, weather_open_meteo]
     allow_danger: false
 
   online:
-    enabled: [calculator, get_time_local, system_status, tool_list, web_search, fetch_url_text, weather_open_meteo]
+    toolpacks:
+      enabled: [builtin.basic, builtin.web, builtin.weather]
+    tools:
+      enabled: [calculator, get_time_local, system_status, tool_list, web_search, fetch_url_text_public, weather_open_meteo]
     allow_danger: false
 
   edge:
-    enabled: [get_time_local, system_status, tool_list, web_search]
+    tools:
+      enabled: [get_time_local, system_status, tool_list, web_search]
     allow_danger: false
+
+# confirm 工具示例，默认不启用：
+# tools.enabled 可加入 memory_write、file_write_sandbox、file_append_sandbox、http_post_json_confirm。
+# ROS2 占位工具应通过显式 ToolPack 或外部扩展启用；danger 速度控制默认关闭。

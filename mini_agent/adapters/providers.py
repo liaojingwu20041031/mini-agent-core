@@ -32,8 +32,8 @@ _register(
         aliases=("ds",),
         base_url="https://api.deepseek.com",
         api_key_env="DEEPSEEK_API_KEY",
-        note="DeepSeek OpenAI-compatible API. Use deepseek-v4-pro for stronger reasoning.",
-        example_models=("deepseek-v4-flash", "deepseek-v4-pro"),
+        note="DeepSeek OpenAI-compatible API. Configure the model ID explicitly.",
+        example_models=(),
     )
 )
 _register(
@@ -43,7 +43,7 @@ _register(
         base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
         api_key_env="DASHSCOPE_API_KEY",
         note="Alibaba Cloud Bailian/DashScope OpenAI-compatible endpoint.",
-        example_models=("qwen-plus", "qwen-max"),
+        example_models=(),
     )
 )
 _register(
@@ -53,7 +53,7 @@ _register(
         base_url="https://api.moonshot.cn/v1",
         api_key_env="MOONSHOT_API_KEY",
         note="Moonshot Kimi OpenAI-compatible API.",
-        example_models=("kimi-k2.6",),
+        example_models=(),
     )
 )
 _register(
@@ -63,7 +63,7 @@ _register(
         base_url="https://open.bigmodel.cn/api/paas/v4",
         api_key_env="ZHIPUAI_API_KEY",
         note="Zhipu/BigModel OpenAI-compatible API preset.",
-        example_models=("glm-4.5",),
+        example_models=(),
     )
 )
 _register(
@@ -73,7 +73,7 @@ _register(
         base_url="https://api.siliconflow.cn/v1",
         api_key_env="SILICONFLOW_API_KEY",
         note="SiliconFlow OpenAI-compatible API preset.",
-        example_models=("deepseek-ai/DeepSeek-V3.1",),
+        example_models=(),
     )
 )
 _register(
@@ -83,7 +83,7 @@ _register(
         base_url="https://api.openai.com/v1",
         api_key_env="OPENAI_API_KEY",
         note="Generic OpenAI preset kept for compatibility.",
-        example_models=("gpt-4o-mini",),
+        example_models=(),
     )
 )
 _register(
@@ -103,7 +103,7 @@ _register(
         base_url="http://localhost:11434/v1",
         api_key_env="LOCAL_LLM_API_KEY",
         note="Local OpenAI-compatible server preset.",
-        example_models=("qwen2.5:7b", "llama3.1:8b"),
+        example_models=(),
     )
 )
 

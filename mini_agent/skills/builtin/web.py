@@ -18,6 +18,7 @@ from mini_agent.core.tools import tool
 USER_AGENT = "mini-agent-core/0.1 (+https://github.com/liaojingwu20041031/mini-agent-core)"
 MAX_SEARCH_RESULTS = 10
 MAX_FETCH_BYTES = 1024 * 1024
+MAX_PUBLIC_FETCH_BYTES = 500 * 1024
 FETCH_ALLOWED_TYPES = ("text/html", "text/plain", "application/json")
 
 
@@ -235,6 +236,80 @@ def fetch_url_text(url: str, max_chars: int = 6000) -> dict[str, Any]:
         body = response.content
         if len(body) > MAX_FETCH_BYTES:
             body = body[:MAX_FETCH_BYTES]
+        decoded = body.decode(response.encoding or "utf-8", errors="replace")
+        if "html" in content_type or "<html" in decoded[:500].lower():
+            parser = _TextExtractor()
+            parser.feed(decoded)
+            title = parser.title
+            text = parser.text
+        else:
+            title = ""
+            text = _clean_space(decoded)
+    except httpx.TimeoutException:
+        return _error(started, "timeout", "抓取网页超时", url=url, final_url="", text="")
+    except httpx.HTTPError as exc:
+        return _error(started, "http_error", str(exc), url=url, final_url="", text="")
+    truncated = len(text) > limit
+    return {
+        "ok": True,
+        "url": url,
+        "final_url": str(response.url),
+        "status_code": response.status_code,
+        "content_type": content_type,
+        "title": title,
+        "text": text[:limit],
+        "truncated": truncated,
+        "elapsed_ms": round((time.perf_counter() - started) * 1000, 1),
+        "error": None,
+    }
+
+
+@tool(
+    description="Fetch public HTTP/HTTPS text with private-network blocking and tight size limits.",
+    title="抓取公开网页文本",
+    category="web",
+    tags=("web", "fetch", "public"),
+    when_to_use="需要读取公开网页、纯文本或 JSON 的少量内容。",
+    when_not_to_use="不要用于内网、localhost、云元数据地址、二进制下载或需要执行 JavaScript 的页面。",
+    examples=("fetch_url_text_public(url='https://example.com')",),
+    timeout=15,
+)
+def fetch_url_text_public(url: str, max_chars: int = 4000) -> dict[str, Any]:
+    started = time.perf_counter()
+    clean_url, blocked = _validate_public_url(url)
+    if blocked:
+        return _error(started, blocked, f"URL 不允许访问：{blocked}", url=url, final_url="", text="")
+    limit = max(1, min(int(max_chars or 4000), 4000))
+    try:
+        current_url = clean_url
+        response = None
+        for redirect_count in range(4):
+            response = httpx.get(
+                current_url,
+                headers={"User-Agent": USER_AGENT},
+                timeout=10,
+                follow_redirects=False,
+            )
+            if response.status_code not in {301, 302, 303, 307, 308}:
+                break
+            location = response.headers.get("location", "")
+            next_url = urljoin(current_url, location)
+            clean_next_url, redirect_blocked = _validate_public_url(next_url)
+            if redirect_blocked:
+                return _error(started, redirect_blocked, f"重定向 URL 不允许访问：{redirect_blocked}", url=url, final_url=next_url, text="")
+            if redirect_count == 3:
+                return _error(started, "too_many_redirects", "重定向超过 3 次", url=url, final_url=next_url, text="")
+            current_url = clean_next_url
+        if response is None:
+            return _error(started, "http_error", "没有收到响应", url=url, final_url="", text="")
+        if response.status_code < 200 or response.status_code >= 300:
+            return _error(started, "http_error", f"HTTP {response.status_code}", url=url, final_url=str(response.url), text="")
+        content_type = response.headers.get("content-type", "").split(";")[0].lower()
+        if content_type and content_type not in FETCH_ALLOWED_TYPES:
+            return _error(started, "unsupported_content_type", content_type, url=url, final_url=str(response.url), text="")
+        body = response.content
+        if len(body) > MAX_PUBLIC_FETCH_BYTES:
+            body = body[:MAX_PUBLIC_FETCH_BYTES]
         decoded = body.decode(response.encoding or "utf-8", errors="replace")
         if "html" in content_type or "<html" in decoded[:500].lower():
             parser = _TextExtractor()

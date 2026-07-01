@@ -18,11 +18,11 @@ def test_provider_presets_have_examples_not_defaults():
 
     assert deepseek.base_url == "https://api.deepseek.com"
     assert not hasattr(deepseek, "default_model")
-    assert "deepseek-v4-flash" in deepseek.example_models
+    assert deepseek.example_models == ()
     assert qwen.base_url == "https://dashscope.aliyuncs.com/compatible-mode/v1"
-    assert "qwen-plus" in qwen.example_models
+    assert qwen.example_models == ()
     assert kimi.base_url == "https://api.moonshot.cn/v1"
-    assert "kimi-k2.6" in kimi.example_models
+    assert kimi.example_models == ()
 
 
 def test_provider_name_is_required():

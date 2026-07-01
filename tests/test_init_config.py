@@ -36,5 +36,5 @@ def test_init_qwen_explains_dashscope_env(tmp_path, capsys):
 
     output = capsys.readouterr().out
     assert "DASHSCOPE_API_KEY" in output
-    assert "QWEN_API_KEY 不是默认变量名" in output
-    assert "--profile deepseek" in output
+    assert "models list" in output
+    assert "qwen" + "-plus" not in output

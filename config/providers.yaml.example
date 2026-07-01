@@ -13,7 +13,7 @@ profiles:
         base_url: http://localhost:11434/v1  # 必填：OpenAI-compatible base_url。
         api_key_env: ""                      # 可选：环境变量名；本地服务通常为空。
         aliases: [ollama, lmstudio]          # 可选：provider 别名。
-        example_models: [qwen2.5:7b, llama3.1:8b]  # 示例模型名，仅供参考。
+        # example_models 仅适合写在 docs/模型示例参考.md，运行逻辑不会读取它作为默认值。
 
   # qwen：阿里云百炼 / DashScope，默认使用内置 base_url 和 DASHSCOPE_API_KEY。
   # 注意：QWEN_API_KEY 不是默认变量名。如果你非要用这个名字，可以只覆盖 api_key_env：
@@ -53,4 +53,4 @@ profiles:
       local:
         base_url: http://127.0.0.1:8000/v1  # 必填：边缘推理服务地址。
         api_key_env: ""                     # 可选：如需鉴权，写环境变量名。
-        example_models: [edge-model]        # 示例模型名，仅供参考。
+        # example_models 仅适合写在 docs/模型示例参考.md，运行逻辑不会读取它作为默认值。

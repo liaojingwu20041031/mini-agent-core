@@ -1,12 +1,14 @@
 # Agent 运行参数模板。
 # 复制为 config/agent.yaml 后使用。
+# 本文件只保留运行参数和 fallback system_prompt。
+# Agent 身份、能力、边界、风格请优先配置 config/agents.yaml。
 profiles:
   # 默认 Agent 参数：轻量、保守、适合新手。
   local: &default_agent
     max_steps: 5                         # 必填：单轮最多模型/工具循环次数，过大可能增加费用。
     max_messages: 40                     # 可选：最多保留消息数，防止上下文无限增长。
     tool_result_max_chars: 4000          # 可选：工具结果最大字符数。
-    system_prompt: You are a helpful lightweight AI agent.  # 必填：系统提示词。
+    system_prompt: You are a helpful lightweight AI agent.  # fallback：缺少 agents.yaml 时才作为系统提示词。
 
   # 以下 profile 默认复用 local 参数，按需覆盖即可。
   minimal: *default_agent                # 最小 profile，不默认联网。
