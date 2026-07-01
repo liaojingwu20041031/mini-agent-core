@@ -17,7 +17,7 @@ def main() -> None:
         provider="qwen",
         region=config.llm_region,
         api_key=os.getenv("DASHSCOPE_API_KEY") or config.llm_api_key,
-        model=config.llm_model if config.llm_provider in {"qwen", "dashscope"} else None,
+        model=config.llm_model,
         timeout=config.llm_timeout,
         temperature=config.llm_temperature,
         extra_body=parse_extra_body(config),

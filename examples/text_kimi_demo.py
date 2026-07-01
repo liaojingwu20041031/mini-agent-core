@@ -16,7 +16,7 @@ def main() -> None:
     llm = OpenAICompatibleClient.from_provider(
         provider="kimi",
         api_key=os.getenv("MOONSHOT_API_KEY") or config.llm_api_key,
-        model=config.llm_model if config.llm_provider in {"kimi", "moonshot"} else None,
+        model=config.llm_model,
         timeout=config.llm_timeout,
         temperature=config.llm_temperature,
         extra_body=parse_extra_body(config),

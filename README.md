@@ -51,7 +51,13 @@ mini_agent/
   interaction/   # text_cli、voice_cli
   voice/         # VoicePipeline 与音频/STT/TTS/VAD/wakeword 接口
   adapters/      # 国内 AI provider、OpenAI-compatible、dummy STT/TTS、MCP/本地语音预留
+  config/        # YAML profile loader、schema、validator
+  models/        # 角色模型 registry / factory
+  mcp/           # MCP 配置、进程封装、工具桥接
+  skills/        # 内置技能 registry
   builtin_tools.py
+config/          # providers/models/agent/voice/tools/mcp profile 配置
+docs/
 examples/
 tests/
 edge/
@@ -75,22 +81,44 @@ python examples/text_tool_demo.py
 
 ## 国内 AI 快速开始
 
-复制 `.env.example` 为 `.env`，优先使用 `LLM_PROVIDER` 选择厂商。如果不想记 base_url，可以只填 provider 和对应 API Key。
+推荐使用 `config/*.yaml` profile 配置；旧 `.env` 入口仍可用，但必须显式设置 `LLM_MODEL`。Provider preset 只提供连接信息和示例模型，不会自动选择具体模型。
 
-| Provider | 别名 | API Key 环境变量 | 默认 base_url | 默认模型 |
+这次配置优化的核心约定：
+
+- 国内 provider 优先：DeepSeek、千问 / DashScope、Kimi / Moonshot、GLM / 智谱、硅基流动、本地 OpenAI-compatible 服务都有 preset。
+- API Key 不写入 YAML，只通过 `api_key_env` 指向环境变量。
+- 模型名必须在 `models.yaml` 或 `.env` 显式声明，避免误用默认模型。
+- `config show` 会隐藏真实 Key，只报告环境变量是否存在。
+- MCP、shell、filesystem、Playwright、危险工具默认保守关闭。
+
+| Provider | 别名 | API Key 环境变量 | base_url | 示例模型 |
 | --- | --- | --- | --- | --- |
-| `deepseek` | `ds` | `DEEPSEEK_API_KEY` | `https://api.deepseek.com` | `deepseek-v4-flash` |
-| `qwen` | `dashscope`, `aliyun`, `bailian`, `tongyi` | `DASHSCOPE_API_KEY` | `https://dashscope.aliyuncs.com/compatible-mode/v1` | `qwen-plus` |
+| `deepseek` | `ds` | `DEEPSEEK_API_KEY` | `https://api.deepseek.com` | `deepseek-v4-flash`, `deepseek-v4-pro` |
+| `qwen` | `dashscope`, `aliyun`, `bailian`, `tongyi` | `DASHSCOPE_API_KEY` | `https://dashscope.aliyuncs.com/compatible-mode/v1` | `qwen-plus`, `qwen-max` |
 | `kimi` | `moonshot` | `MOONSHOT_API_KEY` | `https://api.moonshot.cn/v1` | `kimi-k2.6` |
 | `glm` | `zhipu`, `bigmodel`, `zai` | `ZHIPUAI_API_KEY` | `https://open.bigmodel.cn/api/paas/v4` | `glm-4.5` |
 | `siliconflow` | `sf`, `guiji`, `silicon` | `SILICONFLOW_API_KEY` | `https://api.siliconflow.cn/v1` | `deepseek-ai/DeepSeek-V3.1` |
-| `local` | `ollama`, `lmstudio`, `llama_cpp`, `vllm` | `LOCAL_LLM_API_KEY` | `http://localhost:11434/v1` | `qwen2.5:7b` |
+| `local` | `ollama`, `lmstudio`, `llama_cpp`, `vllm` | `LOCAL_LLM_API_KEY` | `http://localhost:11434/v1` | `qwen2.5:7b`, `llama3.1:8b` |
 
 查看当前内置 provider：
 
 ```bash
 python examples/provider_quickstart.py
 ```
+
+
+## Profile 配置
+
+运行时读取 `config/*.yaml`，缺失时会提示从对应 `.yaml.example` 复制，不会静默套用模型。常用命令：
+
+```bash
+mini-agent config check --profile local
+mini-agent config show --profile local
+```
+
+`models.yaml` 按角色配置 `main/stt/tts/embedding/small`。API Key 不写进 YAML，只通过 `api_key_env` 指向环境变量；`config show` 只显示环境变量名和是否存在。
+
+更完整的配置说明见 [docs/configuration.md](docs/configuration.md)。
 
 ## `.env` 示例
 
@@ -99,6 +127,7 @@ DeepSeek：
 ```env
 LLM_PROVIDER=deepseek
 DEEPSEEK_API_KEY=sk-...
+LLM_MODEL=deepseek-v4-flash
 ```
 
 千问 / 阿里云百炼 DashScope：
@@ -142,7 +171,7 @@ LLM_EXTRA_BODY_JSON={"top_p":0.8}
 LLM_ENABLE_THINKING=false
 ```
 
-显式设置 `LLM_BASE_URL` 时，会优先使用你写的地址，不再使用 provider 默认地址。
+显式设置 `LLM_BASE_URL` 时，会优先使用你写的地址；模型名始终来自 `LLM_MODEL` 或 `config/models.yaml` 的角色配置。
 
 ## 文本模式
 
@@ -207,14 +236,9 @@ registry.register(read_sensor)
 - `confirm`：必须提供 `confirm_callback` 且返回 True。
 - `danger`：默认禁止，除非 `ToolGuard(allow_danger=True)`。
 
-内置 mock 工具：
+内置 safe 技能默认注册：`calculator`、`unit_convert`、`format_json`、`summarize_text`、`extract_key_points`、`translate_text`、`plan_task`、`get_time_local`、`system_status`、`config_get`、`tool_list`。
 
-- `get_time()`
-- `calculate(expression: str)`
-- `get_system_status()`
-- `read_mock_sensor(sensor_name: str)`
-- `set_mock_led(state: str)`，`risk_level=confirm`
-- `dangerous_shell(command: str)`，`risk_level=danger`，默认禁用
+`confirm` 技能如 `set_mock_led`、`memory_write`、`file_write_sandbox` 必须在 `tools.yaml` 显式启用并通过 `ToolGuard` 确认。`danger` 技能如 `dangerous_shell`、`shell_exec` 默认不注册，必须显式启用且执行时设置 `ToolGuard(allow_danger=True)`。
 
 ## 在代码中选择 Provider
 
@@ -254,7 +278,7 @@ llm = OpenAICompatibleClient(
 
 ## MCP 扩展
 
-`mini_agent/adapters/mcp_adapter.py` 只保留边界，不强依赖 MCP Python SDK。后续可以把 MCP tool metadata 映射为本项目的 `ToolDefinition`，让 MCP 工具进入同一套权限和日志系统。
+`mini_agent/mcp/` 提供 V0.1 配置、校验、进程封装和 `ToolDefinition` bridge。默认禁用 Playwright、shell、docker、email、calendar、database_write；filesystem MCP 必须配置 sandbox。V0.1 不引入官方 MCP SDK，真实 `tools/list` 和 `tools/call` 保留为扩展点。
 
 ## 设计参考
 

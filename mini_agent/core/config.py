@@ -126,7 +126,7 @@ def load_config(config_path: str | Path | None = None, env_path: str | Path = ".
     if not config.llm_base_url:
         config.llm_base_url = preset.base_url
     if not config.llm_model:
-        config.llm_model = preset.default_model
+        raise ValueError("LLM model is required. Set LLM_MODEL or main.model in a profile config.")
     if not config.llm_api_key:
         config.llm_api_key = merged_env.get(preset.api_key_env, "")
     return config

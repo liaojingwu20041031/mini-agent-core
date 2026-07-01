@@ -41,9 +41,9 @@ def main() -> None:
     )
     pipeline = VoicePipeline(
         audio_input=TextAudioInput(lambda: input("say> ")),
-        stt=DummySTT(),
+        stt_engine=DummySTT(),
         agent=agent,
-        tts=DummyTTS(),
+        tts_engine=DummyTTS(),
         audio_output=TextAudioOutput(),
     )
     while True:

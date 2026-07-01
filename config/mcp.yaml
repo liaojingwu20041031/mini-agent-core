@@ -1,0 +1,47 @@
+profiles:
+  local:
+    servers: {}
+  qwen:
+    servers: {}
+  deepseek:
+    servers: {}
+  siliconflow:
+    servers: {}
+  remote:
+    servers: {}
+  minimal:
+    servers: {}
+  online:
+    servers:
+      github:
+        enabled: false
+        transport: stdio
+        command: github-mcp-server
+        risk_level: safe
+        tools:
+          - name: repos
+            risk_level: safe
+          - name: issues
+            risk_level: safe
+          - name: pull_requests
+            risk_level: safe
+  dev:
+    servers:
+      filesystem:
+        enabled: false
+        transport: stdio
+        command: filesystem-mcp
+        risk_level: confirm
+        sandbox: .
+      playwright:
+        enabled: false
+        transport: stdio
+        command: playwright-mcp
+        risk_level: danger
+      shell:
+        enabled: false
+        transport: stdio
+        command: shell-mcp
+        risk_level: danger
+  edge:
+    servers: {}

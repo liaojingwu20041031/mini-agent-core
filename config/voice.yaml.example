@@ -1,0 +1,9 @@
+profiles:
+  local:
+    audio_input_device: ""
+    audio_output_device: ""
+  qwen: {}
+  deepseek: {}
+  siliconflow: {}
+  remote: {}
+  edge: {}

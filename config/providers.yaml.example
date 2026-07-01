@@ -1,0 +1,22 @@
+profiles:
+  local:
+    providers:
+      local:
+        base_url: http://localhost:11434/v1
+        api_key_env: ""
+        aliases: [ollama, lmstudio]
+        example_models: [qwen2.5:7b, llama3.1:8b]
+  qwen:
+    providers: {}
+  deepseek:
+    providers: {}
+  siliconflow:
+    providers: {}
+  remote:
+    providers: {}
+  edge:
+    providers:
+      local:
+        base_url: http://127.0.0.1:8000/v1
+        api_key_env: ""
+        example_models: [edge-model]

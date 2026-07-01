@@ -1,0 +1,11 @@
+profiles:
+  local: &default_agent
+    max_steps: 5
+    max_messages: 40
+    tool_result_max_chars: 4000
+    system_prompt: You are a helpful lightweight AI agent.
+  qwen: *default_agent
+  deepseek: *default_agent
+  siliconflow: *default_agent
+  remote: *default_agent
+  edge: *default_agent

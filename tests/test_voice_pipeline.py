@@ -28,9 +28,9 @@ def test_dummy_voice_pipeline_runs_through_same_agent_core():
     output = TextAudioOutput()
     pipeline = VoicePipeline(
         audio_input=StaticAudioInput(),
-        stt=DummySTT(),
+        stt_engine=DummySTT(),
         agent=agent,
-        tts=tts,
+        tts_engine=tts,
         audio_output=output,
     )
 
@@ -41,5 +41,7 @@ def test_dummy_voice_pipeline_runs_through_same_agent_core():
     assert tts.last_text == "echo hello"
     assert output.last_audio == b"echo hello"
     assert pipeline.agent is agent
+    assert pipeline.stt is pipeline.stt_engine
+    assert pipeline.tts is pipeline.tts_engine
     assert any(message.role == "user" and message.content == "hello" for message in agent.session.messages)
 

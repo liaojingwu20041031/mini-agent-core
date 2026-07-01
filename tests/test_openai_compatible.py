@@ -2,6 +2,7 @@ import httpx
 import pytest
 
 from mini_agent.adapters.openai_compatible import OpenAICompatibleClient
+from mini_agent.core.errors import AgentError
 from mini_agent.core.messages import Message
 
 
@@ -21,6 +22,11 @@ class FakeResponse:
         return self._payload
 
 
+def test_openai_compatible_client_requires_explicit_model():
+    with pytest.raises(ValueError, match="Model is required"):
+        OpenAICompatibleClient.from_provider(provider="deepseek", api_key="key")
+
+
 def test_openai_compatible_client_merges_extra_body(monkeypatch):
     captured = {}
 
@@ -32,6 +38,7 @@ def test_openai_compatible_client_merges_extra_body(monkeypatch):
     client = OpenAICompatibleClient.from_provider(
         provider="deepseek",
         api_key="key",
+        model="explicit-model",
         extra_body={"top_p": 0.7, "thinking": {"type": "enabled"}},
     )
 
@@ -40,7 +47,7 @@ def test_openai_compatible_client_merges_extra_body(monkeypatch):
     assert response.content == "ok"
     assert captured["url"] == "https://api.deepseek.com/chat/completions"
     assert captured["headers"]["Authorization"] == "Bearer key"
-    assert captured["json"]["model"] == "deepseek-v4-flash"
+    assert captured["json"]["model"] == "explicit-model"
     assert captured["json"]["top_p"] == 0.7
     assert captured["json"]["thinking"] == {"type": "enabled"}
     assert captured["timeout"] == 9
@@ -51,9 +58,9 @@ def test_openai_compatible_client_wraps_http_errors(monkeypatch):
         return FakeResponse(status_code=429, text="rate limited")
 
     monkeypatch.setattr(httpx, "post", fake_post)
-    client = OpenAICompatibleClient.from_provider(provider="qwen", api_key="key")
+    client = OpenAICompatibleClient.from_provider(provider="qwen", api_key="key", model="qwen-plus")
 
-    with pytest.raises(RuntimeError) as exc:
+    with pytest.raises(AgentError) as exc:
         client.chat([Message(role="user", content="hi")])
 
     message = str(exc.value)

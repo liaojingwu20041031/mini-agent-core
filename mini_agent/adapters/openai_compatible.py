@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from mini_agent.adapters.providers import get_provider_preset
+from mini_agent.core.errors import AgentError
 from mini_agent.core.llm import LLMResponse
 from mini_agent.core.messages import Message, ToolCall
 
@@ -43,10 +44,12 @@ class OpenAICompatibleClient:
         extra_body: dict[str, Any] | None = None,
     ) -> "OpenAICompatibleClient":
         preset = get_provider_preset(provider, region)
+        if not model:
+            raise ValueError(f"Model is required for provider={preset.name}. Configure main.model explicitly.")
         return cls(
             base_url=base_url or preset.base_url,
             api_key=api_key,
-            model=model or preset.default_model,
+            model=model,
             timeout=timeout,
             temperature=temperature,
             provider=preset.name,
@@ -89,12 +92,12 @@ class OpenAICompatibleClient:
             response.raise_for_status()
         except httpx.HTTPStatusError as exc:
             body = exc.response.text[:500]
-            raise RuntimeError(
+            raise AgentError(
                 f"LLM request failed provider={self.provider} status={exc.response.status_code} "
                 f"url={url} body={body}"
             ) from exc
         except httpx.HTTPError as exc:
-            raise RuntimeError(f"LLM request failed provider={self.provider} url={url}: {exc}") from exc
+            raise AgentError(f"LLM request failed provider={self.provider} url={url}: {exc}") from exc
 
         raw = response.json()
         message = raw["choices"][0]["message"]

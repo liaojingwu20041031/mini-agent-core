@@ -1,0 +1,68 @@
+profiles:
+  local:
+    roles:
+      main:
+        provider: local
+        model: qwen2.5:7b
+        timeout: 30
+        temperature: 0.2
+      stt:
+        adapter: dummy
+      tts:
+        adapter: dummy
+      embedding:
+        provider: local
+        model: ""
+      small:
+        provider: local
+        model: qwen2.5:1.5b
+  qwen:
+    roles:
+      main:
+        provider: qwen
+        model: qwen-plus
+      stt:
+        adapter: dummy
+      tts:
+        adapter: dummy
+  deepseek:
+    roles:
+      main:
+        provider: deepseek
+        model: deepseek-v4-flash
+      stt:
+        adapter: dummy
+      tts:
+        adapter: dummy
+  siliconflow:
+    roles:
+      main:
+        provider: siliconflow
+        model: deepseek-ai/DeepSeek-V3.1
+      stt:
+        adapter: dummy
+      tts:
+        adapter: dummy
+  remote:
+    roles:
+      main:
+        provider: openai
+        model: gpt-4o-mini
+      stt:
+        adapter: openai
+        api_key_env: OPENAI_API_KEY
+        model: whisper-1
+      tts:
+        adapter: openai
+        api_key_env: OPENAI_API_KEY
+        model: gpt-4o-mini-tts
+        voice: alloy
+  edge:
+    roles:
+      main:
+        provider: local
+        model: edge-model
+      stt:
+        adapter: dummy
+      tts:
+        adapter: dummy
