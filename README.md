@@ -17,12 +17,12 @@
 </p>
 
 <p align="center">
-  初始化一次即可启动，不写死模型名，不默认启用危险工具，适合嵌入 CLI、APP、Web、机器人和 ARM 项目。
+  初始化一次即可启动；不写死模型名，不默认启用危险工具，适合嵌入 CLI、APP、Web、机器人和 ARM 项目。
 </p>
 
 <p align="center">
   <a href="#快速开始">快速开始</a>
-  · <a href="#为什么不写死模型名">模型配置</a>
+  · <a href="#核心能力">核心能力</a>
   · <a href="#agent-自定义">Agent 自定义</a>
   · <a href="#工具与扩展">工具扩展</a>
   · <a href="#ros2--机器人接入">ROS2 接入</a>
@@ -34,6 +34,26 @@
 
 `mini-agent-core` 是一个可以嵌入 CLI、桌面 APP、Web 后台、机器人和 ARM 设备的轻量 Agent Core。它保留模型适配、Agent loop、工具系统、状态事件和 dummy 语音，不引入 LangChain、LangGraph、CrewAI、AutoGen，也不默认启用 MCP 或 danger 工具。
 
+它更像一个“可交付的 Agent 内核模板”，而不是一个只能跑 demo 的脚手架：你可以先用 CLI 完成模型、Agent、工具和安全边界的验证，再把同一套能力嵌入到自己的业务系统、机器人项目或边缘设备中。
+
+## 这个项目适合什么场景
+
+| 场景                | 你可以怎么用                                                                 |
+| ------------------- | ---------------------------------------------------------------------------- |
+| 快速验证 Agent 方案 | 用 CLI 跑通模型配置、Agent loop、工具调用和状态事件                          |
+| 接入国内模型服务    | 使用 OpenAI-compatible 配置对接通义千问、DeepSeek、Kimi、GLM、硅基流动等服务 |
+| 嵌入现有项目        | 将`mini_agent` 作为轻量 SDK，引入到 CLI、APP、Web 后台或自动化任务中       |
+| 扩展项目工具        | 通过 ToolPack、Capability 和外部 extension 注入业务工具                      |
+| 机器人 / ARM 项目   | 保留 Agent 上层调度能力，真实 ROS2 工具在业务项目中按需接入                  |
+
+## 设计取向
+
+- **轻量优先**：只保留 Agent Core 需要的模型适配、会话、工具、安全和状态事件，不绑定大型编排框架。
+- **配置优先**：模型、Agent、工具、语音、MCP 都从配置进入，方便迁移和复用。
+- **国内 AI 友好**：以 OpenAI-compatible 接口为核心，适配本地模型服务和国内主流模型服务。
+- **安全默认值**：工具按 `safe` / `confirm` / `danger` 分级，危险能力不会默认注册。
+- **可嵌入**：CLI 是验证入口，最终目标是让内核能进入你的真实项目。
+
 ## 核心能力
 
 | 能力         | 说明                                                                  |
@@ -44,6 +64,18 @@
 | 工具可扩展   | `ToolDefinition` metadata、`tools describe`、ToolPack、Capability |
 | 默认安全     | safe/confirm/danger 分级；danger 默认不注册                           |
 | 可嵌入       | ROS2/APP/Web/ARM 项目可通过外部 ToolPack 注入能力                     |
+
+## 项目结构
+
+```text
+mini-agent-core/
+├─ mini_agent/          # Agent Core、模型适配、CLI、工具系统、语音管线
+├─ config/              # provider、model、agent、tool、voice、MCP 配置示例
+├─ docs/                # 快速开始、配置、Agent 扩展、ROS2 接入等文档
+├─ examples/            # 文本、语音、工具、provider 示例
+├─ edge/                # 面向边缘设备的 C++ tool runtime 占位示例
+└─ tests/               # CLI、配置、工具、安全、模型、会话等测试
+```
 
 ## 快速开始
 
@@ -95,22 +127,15 @@ mini-agent models use --profile <profile> --model "<模型ID>"
 
 `<profile>` 可以是 `local`、`qwen`、`deepseek`、`kimi`、`glm`、`siliconflow`、`remote` 或你自己配置的 profile。README 不把任何厂商 profile 当默认选择。
 
-## 为什么不写死模型名
+## 推荐使用路径
 
-模型 ID 会随服务商、地域、账号权限、本地部署和发布时间变化。项目不会在 CLI、state 或运行逻辑里替你猜模型名，也不会用 `provider.example_models` 当 fallback。`models list` 只显示服务端实时返回的 ID；`models use` 只写入你明确选择的 ID。
-
-查看配置位置：
-
-```powershell
-mini-agent config where --profile <profile> --role main
-```
-
-默认 `config show` 不显示具体模型值：
-
-```powershell
-mini-agent config show --profile <profile>
-mini-agent config show --profile <profile> --show-model
-```
+1. 用 `mini-agent init --profile <profile>` 初始化配置。
+2. 用 `models list` 查看服务端实际可用模型。
+3. 用 `models use` 写入你明确选择的模型 ID。
+4. 用 `config check` 检查 profile、模型和环境变量。
+5. 用 `use` 固定当前 profile 与 Agent。
+6. 用 `start`、`chat` 或 `speak` 进入交互。
+7. 根据项目需要扩展 Agent、ToolPack、MCP 或语音管线。
 
 ## 一次配置，后续启动
 
@@ -145,6 +170,8 @@ mini-agent text --profile <profile> --agent default
 mini-agent use --profile <profile> --agent ros2_robot
 ```
 
+Agent 配置建议把“能做什么”和“不能做什么”同时写清楚。这样在 CLI、Web 后台、机器人项目中复用同一个 Agent 时，身份、能力和边界不会散落在业务代码里。
+
 ## 工具与扩展
 
 查看工具：
@@ -172,9 +199,40 @@ extensions:
     factory: build_ros2_toolpack
 ```
 
+推荐把通用工具放进内置或项目级 ToolPack，把业务工具放在外部 extension 中。这样 Agent Core 保持干净，业务项目也可以独立演进。
+
+### 工具安全分级
+
+| 分级        | 适合能力                                        | 默认策略               |
+| ----------- | ----------------------------------------------- | ---------------------- |
+| `safe`    | 计算、只读查询、公开网页读取等低风险能力        | 可直接注册             |
+| `confirm` | 需要用户确认的操作，例如发送请求、触发外部动作  | 注册前后应保留确认链路 |
+| `danger`  | Shell、文件破坏性操作、生产环境写入等高风险能力 | 默认不注册             |
+
+这套分级不是为了限制扩展，而是让项目在进入真实业务系统前有清晰的安全边界。
+
 ## ROS2 / 机器人接入
 
 项目提供 `mini_agent.toolpacks.ros2_stub` 作为占位，不默认依赖 `rclpy`。真实 ROS2 工具建议放在你的机器人项目中，通过外部 ToolPack 注入。Agent 只做上层任务协调，不负责实时控制、急停、避障或底盘闭环。
+
+推荐接入方式：
+
+1. 在机器人项目中实现 ROS2 ToolPack。
+2. 在 `config/tools.yaml` 的 `extensions` 中注册 factory。
+3. 让 Agent 只输出任务级意图，由 ROS2 节点负责实时控制和安全保护。
+
+## 配置文件说明
+
+| 文件                      | 作用                                       |
+| ------------------------- | ------------------------------------------ |
+| `config/providers.yaml` | provider、base_url、API Key 环境变量等配置 |
+| `config/models.yaml`    | 当前 profile 选择的模型 ID                 |
+| `config/agents.yaml`    | 多 Agent 身份、能力、边界和风格            |
+| `config/tools.yaml`     | ToolPack、工具启用列表和外部扩展           |
+| `config/voice.yaml`     | dummy / OpenAI / 本地语音相关配置          |
+| `config/mcp.yaml`       | MCP server 配置，默认不强制启用            |
+
+真实 API Key 应放在环境变量中，不要写入仓库。
 
 ## 文档
 
@@ -183,3 +241,12 @@ extensions:
 - [Agent与扩展](docs/Agent与扩展.md)
 - [ROS2接入](docs/ROS2接入.md)
 - [模型示例参考](docs/模型示例参考.md)
+
+## 开发与验证
+
+```powershell
+python -m pip install -e ".[dev]"
+pytest
+```
+
+测试覆盖配置初始化、模型选择、OpenAI-compatible provider、工具安全、CLI 入口、会话状态和语音占位管线。对外展示或二次开发前，建议至少运行一次完整测试。
