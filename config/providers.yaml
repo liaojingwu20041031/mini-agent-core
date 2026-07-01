@@ -1,11 +1,17 @@
+# Provider 配置。
+# 用途：覆盖或扩展内置 provider preset。
+# 安全要求：api_key_env 只能写环境变量名，不能写真实 API Key。
 profiles:
+  # local：本地 OpenAI-compatible 服务。
   local:
     providers:
       local:
-        base_url: http://localhost:11434/v1
-        api_key_env: ""
-        aliases: [ollama, lmstudio]
-        example_models: [qwen2.5:7b, llama3.1:8b]
+        base_url: http://localhost:11434/v1  # 必填：本地服务地址，例如 Ollama。
+        api_key_env: ""                      # 可选：本地服务通常不需要 Key。
+        aliases: [ollama, lmstudio]          # 可选：别名。
+        example_models: [qwen2.5:7b, llama3.1:8b]  # 示例模型名，仅供参考。
+
+  # 国内/远程 provider 默认使用代码内置 preset，这里留空即可。
   qwen:
     providers: {}
   deepseek:
@@ -18,6 +24,8 @@ profiles:
     providers: {}
   remote:
     providers: {}
+
+  # edge：边缘设备上的本地推理服务地址。
   edge:
     providers:
       local:

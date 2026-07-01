@@ -1,18 +1,27 @@
+# 内置技能配置模板。
+# 复制为 config/tools.yaml 后使用。
+# 风险等级：
+# - safe：默认可启用，适合新手。
+# - confirm：会改变外部状态，执行前必须确认。
+# - danger：可能执行 shell、写文件或产生破坏性影响，默认不注册。
 profiles:
+  # local：本地开发默认启用完整 safe 技能集。
   local:
-    enabled:
-      - calculator
-      - unit_convert
-      - format_json
-      - summarize_text
-      - extract_key_points
-      - translate_text
-      - plan_task
-      - get_time_local
-      - system_status
-      - config_get
-      - tool_list
-    allow_danger: false
+    enabled:                  # 必填：启用的技能名列表。
+      - calculator            # 计算表达式。
+      - unit_convert          # 单位换算。
+      - format_json           # JSON 格式化。
+      - summarize_text        # 文本摘要。
+      - extract_key_points    # 提取要点。
+      - translate_text        # 简单翻译。
+      - plan_task             # 任务拆解。
+      - get_time_local        # 获取本地时间。
+      - system_status         # 获取轻量系统状态。
+      - config_get            # 查看配置项。
+      - tool_list             # 列出工具。
+    allow_danger: false       # 风险：禁止默认开启 danger 技能。
+
+  # 远程模型 profile 默认只开少量 safe 技能，降低新手误用风险。
   qwen:
     enabled: [calculator, get_time_local, system_status, tool_list]
     allow_danger: false

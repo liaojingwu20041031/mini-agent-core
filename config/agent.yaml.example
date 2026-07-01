@@ -1,13 +1,18 @@
+# Agent 运行参数模板。
+# 复制为 config/agent.yaml 后使用。
 profiles:
+  # 默认 Agent 参数：轻量、保守、适合新手。
   local: &default_agent
-    max_steps: 5
-    max_messages: 40
-    tool_result_max_chars: 4000
-    system_prompt: You are a helpful lightweight AI agent.
-  qwen: *default_agent
-  deepseek: *default_agent
-  kimi: *default_agent
-  glm: *default_agent
-  siliconflow: *default_agent
-  remote: *default_agent
-  edge: *default_agent
+    max_steps: 5                         # 必填：单轮最多模型/工具循环次数，过大可能增加费用。
+    max_messages: 40                     # 可选：最多保留消息数，防止上下文无限增长。
+    tool_result_max_chars: 4000          # 可选：工具结果最大字符数。
+    system_prompt: You are a helpful lightweight AI agent.  # 必填：系统提示词。
+
+  # 以下 profile 默认复用 local 参数，按需覆盖即可。
+  qwen: *default_agent                   # 阿里云百炼 / DashScope。
+  deepseek: *default_agent               # DeepSeek。
+  kimi: *default_agent                   # Moonshot Kimi。
+  glm: *default_agent                    # 智谱 GLM。
+  siliconflow: *default_agent            # 硅基流动。
+  remote: *default_agent                 # OpenAI 或其他远程服务。
+  edge: *default_agent                   # ARM / 嵌入式。

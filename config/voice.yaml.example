@@ -1,11 +1,18 @@
+# 语音配置模板。
+# 复制为 config/voice.yaml 后使用。
+# STT/TTS 的模型和 adapter 配置在 models.yaml 的 stt/tts 角色里。
+# 本文件只放音频设备等运行时参数。
 profiles:
+  # local：默认 dummy 语音，不需要麦克风和扬声器。
   local:
-    audio_input_device: ""
-    audio_output_device: ""
-  qwen: {}
-  deepseek: {}
-  kimi: {}
-  glm: {}
-  siliconflow: {}
-  remote: {}
-  edge: {}
+    audio_input_device: ""   # 可选：真实麦克风设备名；dummy 模式留空。
+    audio_output_device: ""  # 可选：真实扬声器设备名；dummy 模式留空。
+
+  # 国内远程模型默认也先用 dummy 语音，避免新手被音频环境卡住。
+  qwen: {}                   # 阿里云百炼 / DashScope。
+  deepseek: {}               # DeepSeek。
+  kimi: {}                   # Moonshot Kimi。
+  glm: {}                    # 智谱 GLM。
+  siliconflow: {}            # 硅基流动。
+  remote: {}                 # 真实 STT/TTS 请到 models.yaml 的 remote.stt/remote.tts 填写。
+  edge: {}                   # ARM / 嵌入式设备可按需填写设备名。

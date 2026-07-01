@@ -1,0 +1,14 @@
+# 可运行 demo provider 配置。
+# API Key 仍然只通过环境变量读取，不能写真实 Key。
+profiles:
+  local:
+    providers:
+      local:
+        base_url: http://localhost:11434/v1
+        api_key_env: ""
+        aliases: [ollama, lmstudio]
+        example_models: [qwen2.5:7b, llama3.1:8b]
+  qwen:
+    providers: {}
+  deepseek:
+    providers: {}

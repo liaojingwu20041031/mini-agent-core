@@ -1,0 +1,36 @@
+# 可运行 demo 模型配置。
+# 这个文件不作为默认模板使用，只给演示或测试时复制参考。
+profiles:
+  local:
+    roles:
+      main:
+        provider: local
+        model: qwen2.5:7b
+        timeout: 30
+        temperature: 0.2
+      stt:
+        adapter: dummy
+      tts:
+        adapter: dummy
+      small:
+        provider: local
+        model: qwen2.5:1.5b
+  qwen:
+    roles:
+      main:
+        provider: qwen
+        model: qwen-plus
+      stt:
+        adapter: dummy
+      tts:
+        adapter: dummy
+  deepseek:
+    roles:
+      main:
+        provider: deepseek
+        model: deepseek-chat
+      stt:
+        adapter: dummy
+      tts:
+        adapter: dummy
+

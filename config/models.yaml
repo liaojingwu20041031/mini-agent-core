@@ -1,85 +1,103 @@
+# 模型角色配置。
+# 注意：这里不替你选择模型。main.model 必须由使用者自己填写。
+# API Key 不写在本文件里，只通过 providers.yaml 或角色上的 api_key_env 指向环境变量。
 profiles:
+  # local：本地 OpenAI-compatible 服务，例如 Ollama、LM Studio、llama.cpp server、vLLM。
   local:
     roles:
       main:
-        provider: local
-        model: qwen2.5:7b
-        timeout: 30
-        temperature: 0.2
+        provider: local        # 必填：使用 providers.yaml 中的 provider 名。
+        model: ""              # 必填：例如 qwen2.5:7b；请按你的本地服务填写。
+        timeout: 30            # 请求超时时间，单位秒。
+        temperature: 0.2       # 采样温度，0 更稳定，数值越高越发散。
       stt:
-        adapter: dummy
+        adapter: dummy         # STT 配置位置：dummy 表示用文字模拟语音输入。
       tts:
-        adapter: dummy
+        adapter: dummy         # TTS 配置位置：dummy 表示把回复文字直接输出。
       embedding:
-        provider: local
-        model: ""
+        provider: local        # 预留：向量模型 provider。
+        model: ""              # 可选：需要向量检索时再填写。
       small:
-        provider: local
-        model: qwen2.5:1.5b
+        provider: local        # 可选：低成本小模型角色。
+        model: ""              # 可选：例如 qwen2.5:1.5b。
+
+  # qwen：阿里云百炼 / DashScope。
   qwen:
     roles:
       main:
-        provider: qwen
-        model: qwen-plus
+        provider: qwen         # 必填：使用内置 qwen provider preset。
+        model: ""              # 必填：例如 qwen-plus、qwen-max，由你自己选择。
       stt:
         adapter: dummy
       tts:
         adapter: dummy
+
+  # deepseek：DeepSeek OpenAI-compatible API。
   deepseek:
     roles:
       main:
         provider: deepseek
-        model: deepseek-v4-flash
+        model: ""              # 必填：例如 deepseek-chat、deepseek-reasoner。
       stt:
         adapter: dummy
       tts:
         adapter: dummy
+
+  # kimi：Moonshot Kimi。
   kimi:
     roles:
       main:
         provider: kimi
-        model: kimi-k2.6
+        model: ""              # 必填：例如 kimi-k2.6。
       stt:
         adapter: dummy
       tts:
         adapter: dummy
+
+  # glm：智谱 GLM。
   glm:
     roles:
       main:
         provider: glm
-        model: glm-4.5
+        model: ""              # 必填：例如 glm-4.5。
       stt:
         adapter: dummy
       tts:
         adapter: dummy
+
+  # siliconflow：硅基流动，可接入多个开源/国产模型。
   siliconflow:
     roles:
       main:
         provider: siliconflow
-        model: deepseek-ai/DeepSeek-V3.1
+        model: ""              # 必填：例如 deepseek-ai/DeepSeek-V3.1。
       stt:
         adapter: dummy
       tts:
         adapter: dummy
+
+  # remote：远程文本 + 远程 STT/TTS 示例。默认不填模型，避免误用付费模型。
   remote:
     roles:
       main:
         provider: openai
-        model: gpt-4o-mini
+        model: ""              # 必填：例如 gpt-4o-mini。
       stt:
-        adapter: openai
-        api_key_env: OPENAI_API_KEY
-        model: whisper-1
+        adapter: openai        # STT 配置位置：真实语音转文字 adapter。
+        api_key_env: OPENAI_API_KEY  # 只能写环境变量名，不能写真实 Key。
+        model: ""              # 必填：例如 whisper-1。
       tts:
-        adapter: openai
+        adapter: openai        # TTS 配置位置：真实文字转语音 adapter。
         api_key_env: OPENAI_API_KEY
-        model: gpt-4o-mini-tts
-        voice: alloy
+        model: ""              # 必填：例如 gpt-4o-mini-tts。
+        voice: alloy           # TTS 音色名。
+
+  # edge：ARM / 嵌入式部署占位，通常指向边缘设备上的本地推理服务。
   edge:
     roles:
       main:
         provider: local
-        model: edge-model
+        model: ""              # 必填：例如 edge-model。
       stt:
         adapter: dummy
       tts:

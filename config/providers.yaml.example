@@ -1,26 +1,45 @@
+# Provider 配置模板。
+# 复制为 config/providers.yaml 后使用。
+# 每个 provider 只描述连接方式，不替你选择模型。
+# API Key 只能写环境变量名，不能写真实 Key。
 profiles:
+  # local：本地 OpenAI-compatible 服务，例如 Ollama、LM Studio、llama.cpp server、vLLM。
   local:
     providers:
       local:
-        base_url: http://localhost:11434/v1
-        api_key_env: ""
-        aliases: [ollama, lmstudio]
-        example_models: [qwen2.5:7b, llama3.1:8b]
+        base_url: http://localhost:11434/v1  # 必填：OpenAI-compatible base_url。
+        api_key_env: ""                      # 可选：环境变量名；本地服务通常为空。
+        aliases: [ollama, lmstudio]          # 可选：provider 别名。
+        example_models: [qwen2.5:7b, llama3.1:8b]  # 示例模型名，仅供参考。
+
+  # qwen：阿里云百炼 / DashScope，默认使用内置 base_url 和 DASHSCOPE_API_KEY。
   qwen:
     providers: {}
+
+  # deepseek：DeepSeek，默认使用内置 base_url 和 DEEPSEEK_API_KEY。
   deepseek:
     providers: {}
+
+  # kimi：Moonshot Kimi，默认使用内置 base_url 和 MOONSHOT_API_KEY。
   kimi:
     providers: {}
+
+  # glm：智谱 GLM，默认使用内置 base_url 和 ZHIPUAI_API_KEY。
   glm:
     providers: {}
+
+  # siliconflow：硅基流动，默认使用内置 base_url 和 SILICONFLOW_API_KEY。
   siliconflow:
     providers: {}
+
+  # remote：OpenAI 或其他远程通用服务。
   remote:
     providers: {}
+
+  # edge：ARM / 嵌入式设备常用，本地网关地址按实际设备修改。
   edge:
     providers:
       local:
-        base_url: http://127.0.0.1:8000/v1
-        api_key_env: ""
-        example_models: [edge-model]
+        base_url: http://127.0.0.1:8000/v1  # 必填：边缘推理服务地址。
+        api_key_env: ""                     # 可选：如需鉴权，写环境变量名。
+        example_models: [edge-model]        # 示例模型名，仅供参考。

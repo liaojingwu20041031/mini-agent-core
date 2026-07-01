@@ -1,4 +1,9 @@
+# MCP 配置模板。
+# 复制为 config/mcp.yaml 后使用。
+# 默认关闭原因：MCP server 可能联网、读写文件或执行命令。新手应先跑通 Agent Core，再按需开启。
+# 风险：enabled: true 前请确认 command 来源可信。
 profiles:
+  # 常规模型 profile 默认不启用 MCP，保持轻量。
   local:
     servers: {}
   qwen:
@@ -13,39 +18,89 @@ profiles:
     servers: {}
   remote:
     servers: {}
+
+  # minimal：完全不启用 MCP。
   minimal:
     servers: {}
+
+  # online：普适联网能力，默认关闭；需要联网能力时逐个改 enabled: true。
   online:
+    servers:
+      time:
+        enabled: false        # 默认关闭：改 true 才会启用。
+        transport: stdio      # MCP 传输方式，当前只做配置占位。
+        command: time-mcp     # 启动命令；必须来自可信来源。
+        risk_level: safe      # 风险：只读时间信息。
+      fetch:
+        enabled: false
+        transport: stdio
+        command: fetch-mcp
+        risk_level: safe      # 风险：会访问网络，请注意隐私和代理。
+      tavily_search:
+        enabled: false
+        transport: stdio
+        command: tavily-mcp
+        risk_level: safe      # 风险：联网搜索，可能产生费用或泄露查询。
+      weather_open_meteo:
+        enabled: false
+        transport: stdio
+        command: weather-open-meteo-mcp
+        risk_level: safe      # 风险：联网天气查询。
+
+  # dev：开发相关能力，默认关闭。
+  dev:
     servers:
       github:
         enabled: false
         transport: stdio
         command: github-mcp-server
-        risk_level: safe
-        tools:
-          - name: repos
-            risk_level: safe
-          - name: issues
-            risk_level: safe
-          - name: pull_requests
-            risk_level: safe
-  dev:
-    servers:
+        risk_level: safe      # GitHub 放 dev，不放 online。
       filesystem:
         enabled: false
         transport: stdio
         command: filesystem-mcp
-        risk_level: confirm
-        sandbox: .
+        risk_level: confirm   # 风险：可能读写文件，必须确认。
+        sandbox: .            # 必填：filesystem 必须限制在 sandbox 内。
+      git:
+        enabled: false
+        transport: stdio
+        command: git-mcp
+        risk_level: confirm   # 风险：可能修改仓库状态。
+      context7:
+        enabled: false
+        transport: stdio
+        command: context7-mcp
+        risk_level: safe      # 用于库/API 文档查询。
+
+  # danger：高风险能力，默认关闭；不建议新手启用。
+  danger:
+    servers:
       playwright:
         enabled: false
         transport: stdio
         command: playwright-mcp
-        risk_level: danger
+        risk_level: danger    # 危险：可控制浏览器并访问外部页面。
       shell:
         enabled: false
         transport: stdio
         command: shell-mcp
-        risk_level: danger
+        risk_level: danger    # 危险：可执行系统命令。
+      docker:
+        enabled: false
+        transport: stdio
+        command: docker-mcp
+        risk_level: danger    # 危险：可操作容器和镜像。
+
+  # edge：边缘设备只保留轻量 MCP 占位。
   edge:
-    servers: {}
+    servers:
+      time:
+        enabled: false
+        transport: stdio
+        command: time-mcp
+        risk_level: safe
+      fetch:
+        enabled: false
+        transport: stdio
+        command: fetch-mcp
+        risk_level: safe

@@ -1,3 +1,5 @@
+# MCP 配置。
+# 默认关闭所有 MCP server，避免新手意外联网、读写文件或执行命令。
 profiles:
   local:
     servers: {}
@@ -17,26 +19,51 @@ profiles:
     servers: {}
   online:
     servers:
+      time:
+        enabled: false
+        transport: stdio
+        command: time-mcp
+        risk_level: safe
+      fetch:
+        enabled: false
+        transport: stdio
+        command: fetch-mcp
+        risk_level: safe
+      tavily_search:
+        enabled: false
+        transport: stdio
+        command: tavily-mcp
+        risk_level: safe
+      weather_open_meteo:
+        enabled: false
+        transport: stdio
+        command: weather-open-meteo-mcp
+        risk_level: safe
+  dev:
+    servers:
       github:
         enabled: false
         transport: stdio
         command: github-mcp-server
         risk_level: safe
-        tools:
-          - name: repos
-            risk_level: safe
-          - name: issues
-            risk_level: safe
-          - name: pull_requests
-            risk_level: safe
-  dev:
-    servers:
       filesystem:
         enabled: false
         transport: stdio
         command: filesystem-mcp
         risk_level: confirm
         sandbox: .
+      git:
+        enabled: false
+        transport: stdio
+        command: git-mcp
+        risk_level: confirm
+      context7:
+        enabled: false
+        transport: stdio
+        command: context7-mcp
+        risk_level: safe
+  danger:
+    servers:
       playwright:
         enabled: false
         transport: stdio
@@ -47,5 +74,20 @@ profiles:
         transport: stdio
         command: shell-mcp
         risk_level: danger
+      docker:
+        enabled: false
+        transport: stdio
+        command: docker-mcp
+        risk_level: danger
   edge:
-    servers: {}
+    servers:
+      time:
+        enabled: false
+        transport: stdio
+        command: time-mcp
+        risk_level: safe
+      fetch:
+        enabled: false
+        transport: stdio
+        command: fetch-mcp
+        risk_level: safe
