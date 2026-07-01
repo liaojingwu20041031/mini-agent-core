@@ -1,285 +1,185 @@
 <p align="center">
-  <img src="logo/logo.png" alt="mini-agent-core logo" width="180" />
+  <img src="logo/logo.png" alt="mini-agent-core logo" width="160" />
 </p>
 
 <h1 align="center">mini-agent-core</h1>
 
 <p align="center">
-  轻量、快捷、国内 AI 友好的 Agent Core / SDK 模板
+  <strong>轻量、可移植、国内 AI 友好的 Agent Core / SDK 模板</strong>
 </p>
 
 <p align="center">
-  <strong>OpenAI-compatible</strong> · <strong>工具调用</strong> · <strong>Profile 配置</strong> · <strong>Dummy 语音</strong> · <strong>ARM 预留</strong>
+  <code>OpenAI-compatible</code>
+  · <code>CLI-first</code>
+  · <code>ToolPack</code>
+  · <code>AgentSpec</code>
+  · <code>ROS2-ready</code>
+</p>
+
+<p align="center">
+  初始化一次即可启动，不写死模型名，不默认启用危险工具，适合嵌入 CLI、APP、Web、机器人和 ARM 项目。
+</p>
+
+<p align="center">
+  <a href="#快速开始">快速开始</a>
+  · <a href="#为什么不写死模型名">模型配置</a>
+  · <a href="#agent-自定义">Agent 自定义</a>
+  · <a href="#工具与扩展">工具扩展</a>
+  · <a href="#ros2--机器人接入">ROS2 接入</a>
 </p>
 
 ---
 
 ## 一句话介绍
 
-`mini-agent-core` 是一个可以快速嵌入机器人、桌面工具、Web 后台、ARM Linux 设备的轻量 Agent 核心模板：保留 Agent loop、工具系统、模型适配和语音管线，不把 LangChain 这类重框架塞进来。
+`mini-agent-core` 是一个可以嵌入 CLI、桌面 APP、Web 后台、机器人和 ARM 设备的轻量 Agent Core。它保留模型适配、Agent loop、工具系统、状态事件和 dummy 语音，不引入 LangChain、LangGraph、CrewAI、AutoGen，也不默认启用 MCP 或 danger 工具。
 
-它适合你把 Agent 能力接进自己的项目，而不是先搭一整套平台。
+## 核心能力
 
-## 核心特性
+| 能力         | 说明                                                                  |
+| ------------ | --------------------------------------------------------------------- |
+| 模型配置闭环 | `models list/use/check/doctor` 帮你查询、写入、验证模型 ID          |
+| 一键启动     | `use` 一次后可直接 `start/chat/speak`                             |
+| Agent 可配置 | `config/agents.yaml` 描述身份、能力、边界、风格                     |
+| 工具可扩展   | `ToolDefinition` metadata、`tools describe`、ToolPack、Capability |
+| 默认安全     | safe/confirm/danger 分级；danger 默认不注册                           |
+| 可嵌入       | ROS2/APP/Web/ARM 项目可通过外部 ToolPack 注入能力                     |
 
-| 能力         | 说明                                                               |
-| ------------ | ------------------------------------------------------------------ |
-| 国内 AI 友好 | 内置 Qwen、DeepSeek、Kimi、GLM、SiliconFlow、local provider preset |
-| 统一模型入口 | 走 OpenAI-compatible Chat Completions                              |
-| Profile 配置 | `config/*.yaml` 管理模型、工具、语音、MCP                        |
-| 工具安全分层 | safe / confirm / danger 三类风险等级                               |
-| 默认联网     | safe 工具默认提供搜索和天气，不启动 MCP                            |
-| 统一 CLI     | `mini-agent init/text/voice/tools/mcp/config`                    |
-| 轻量语音     | 默认 dummy 语音，不要求麦克风和声卡                                |
-| 嵌入式友好   | 保留 ARM / C++ edge runtime 扩展方向                               |
+## 快速开始
 
-## 适合什么场景
-
-- 想给现有 Python 项目加一个可控 Agent Core。
-- 想用国内模型服务快速做文本助手、工具助手、小型机器人。
-- 想在 ARM Linux、边缘设备或本地模型服务上保留扩展空间。
-- 想学习一个不重、不绕、边界清楚的 Agent 模板。
-
-## 不适合什么场景
-
-- 需要完整多 Agent 编排平台。
-- 需要开箱即用 Web UI、工作流画布、长期记忆系统。
-- 需要生产级 MCP SDK 完整实现。
-- 需要默认启用 shell、docker、浏览器自动化等高风险能力。
-
-## 5 分钟快速开始
-
-安装：
-
-```bash
+```powershell
 cd mini-agent-core
 python -m venv .venv
 .\.venv\Scripts\activate
 python -m pip install -e ".[dev]"
 ```
 
-初始化配置。先选择你要用的 profile，不默认绑定任何一家模型厂商：
-
-| 场景                                | profile         | API Key 环境变量        | 模型名示例                    |
-| ----------------------------------- | --------------- | ----------------------- | ----------------------------- |
-| 本地 Ollama / LM Studio / llama.cpp | `local`       | 通常不需要              | `qwen2.5:7b`                |
-| 阿里云百炼 / DashScope              | `qwen`        | `DASHSCOPE_API_KEY`   | `qwen-plus`                 |
-| DeepSeek                            | `deepseek`    | `DEEPSEEK_API_KEY`    | `deepseek-chat`             |
-| Moonshot Kimi                       | `kimi`        | `MOONSHOT_API_KEY`    | `kimi-k2.6`                 |
-| 智谱 GLM                            | `glm`         | `ZHIPUAI_API_KEY`     | `glm-4.5`                   |
-| 硅基流动                            | `siliconflow` | `SILICONFLOW_API_KEY` | `deepseek-ai/DeepSeek-V3.1` |
-
-下面以 DeepSeek 演示一次完整流程；你也可以把 `deepseek` 换成 `qwen`、`kimi`、`glm`、`siliconflow` 或 `local`：
+先选择 `<profile>`。远程服务 profile 需要先设置 API Key 环境变量；本地 profile 不需要 Key，但要先启动 OpenAI-compatible 服务。
 
 ```powershell
-mini-agent init --profile deepseek
-$env:DEEPSEEK_API_KEY="你的 API Key"
+mini-agent init --profile <profile>
+
+# 远程服务：按下方表格设置对应环境变量；本地服务可跳过这一行。
+$env:<API_KEY_ENV>="你的 API Key"
+
+# 本地服务：先启动 Ollama、LM Studio、llama.cpp server、vLLM 等 OpenAI-compatible 服务。
+mini-agent models list --profile <profile>
+mini-agent models use --profile <profile> --model "<从上一步复制的模型ID>"
+mini-agent config check --profile <profile>
+mini-agent use --profile <profile> --agent default
+mini-agent start
 ```
 
-编辑 `config/models.yaml`，把对应 profile 的 `main.model` 改成你自己选择的模型，例如：
+常用 profile 与环境变量：
 
-```yaml
-profiles:
-  deepseek:
-    roles:
-      main:
-        provider: deepseek
-        model: "deepseek-chat"
-```
+| profile         | 用途                        | API Key 环境变量        |
+| --------------- | --------------------------- | ----------------------- |
+| `local`       | 本地 OpenAI-compatible 服务 | 通常为空                |
+| `qwen`        | 阿里云百炼 / DashScope      | `DASHSCOPE_API_KEY`   |
+| `deepseek`    | DeepSeek                    | `DEEPSEEK_API_KEY`    |
+| `kimi`        | Moonshot Kimi               | `MOONSHOT_API_KEY`    |
+| `glm`         | 智谱 GLM                    | `ZHIPUAI_API_KEY`     |
+| `siliconflow` | 硅基流动                    | `SILICONFLOW_API_KEY` |
 
-检查配置：
-
-```bash
-mini-agent config check --profile deepseek
-```
-
-启动文本模式：
-
-```bash
-mini-agent text --profile deepseek
-```
-
-启动 dummy 语音模式：
-
-```bash
-mini-agent voice --profile deepseek
-```
-
-更详细的新手教程见 [docs/quickstart.md](docs/quickstart.md)。
-
-## 默认联网能力
-
-标准 profile 默认启用轻量 safe 联网工具：`web_search` 和 `weather_open_meteo`。它们不需要 Tavily、Brave、SerpAPI 或 Google CSE Key，也不会启动 MCP server。
-
-`online` profile 额外启用 `fetch_url_text`，用于抓取公开网页正文。MCP 搜索仍是高级扩展，默认 disabled。
-
-## 状态显示
-
-`mini-agent text` 默认显示简洁状态，方便确认模型和工具正在工作：
-
-```text
-[llm] 请求中...
-[llm] 完成 1320ms
-[tool] web_search 开始
-[tool] web_search 完成 480ms
-```
-
-嵌入其他系统时可以关闭控制台状态：
-
-```bash
-mini-agent text --profile qwen --no-status
-```
-
-## 架构概览
-
-```mermaid
-flowchart LR
-    CLI[mini-agent CLI] --> Agent[Agent Core]
-    TextCLI[TextCLI] --> Agent
-    VoiceCLI[Dummy Voice] --> VoicePipeline[VoicePipeline]
-    VoicePipeline --> STT[STT Adapter]
-    STT --> Agent
-    Agent --> LLM[OpenAI-compatible Client]
-    Agent --> Tools[ToolRegistry]
-    Tools --> Guard[ToolGuard]
-    Agent --> Session[Session]
-    Agent --> Trace[Trace Log]
-    Agent --> TTS[TTS Adapter]
-    TTS --> VoicePipeline
-```
-
-## 最小代码示例
-
-```python
-from mini_agent.core.tools import ToolRegistry, tool
-
-@tool(description="Read a sensor")
-def read_sensor(name: str) -> dict:
-    return {"name": name, "value": 42}
-
-registry = ToolRegistry()
-registry.register(read_sensor)
-print(registry.list()[0].name)
-```
-
-## 配置文件说明
-
-| 文件                      | 用途                                            |
-| ------------------------- | ----------------------------------------------- |
-| `config/providers.yaml` | 覆盖或扩展 provider 连接信息                    |
-| `config/models.yaml`    | 按 profile 配置`main/stt/tts/small/embedding` |
-| `config/agent.yaml`     | Agent 步数、上下文、系统提示词                  |
-| `config/voice.yaml`     | 音频设备等语音运行参数                          |
-| `config/tools.yaml`     | 启用 safe/confirm/danger 技能                   |
-| `config/mcp.yaml`       | MCP server profile，默认关闭                    |
-
-`config/quickstart.yaml.example` 是一文件快速配置参考；当前运行时仍使用上面的六文件高级配置。完整说明见 [docs/configuration.md](docs/configuration.md)。
-
-## 国内模型配置示例
-
-Qwen：
+如果你已经设置好 API Key 或本地服务，可以用向导模式：
 
 ```powershell
-$env:DASHSCOPE_API_KEY="你的 API Key"
-mini-agent init --profile qwen
+mini-agent init --profile <profile> --wizard
 ```
 
-```yaml
-# config/models.yaml
-profiles:
-  qwen:
-    roles:
-      main:
-        provider: qwen
-        model: "qwen-plus"
-```
-
-DeepSeek：
+如果 provider 不支持 `/models`，就到服务商控制台或本地模型服务页面复制模型 ID，然后运行：
 
 ```powershell
-$env:DEEPSEEK_API_KEY="你的 API Key"
+mini-agent models use --profile <profile> --model "<模型ID>"
 ```
+
+`<profile>` 可以是 `local`、`qwen`、`deepseek`、`kimi`、`glm`、`siliconflow`、`remote` 或你自己配置的 profile。README 不把任何厂商 profile 当默认选择。
+
+## 为什么不写死模型名
+
+模型 ID 会随服务商、地域、账号权限、本地部署和发布时间变化。项目不会在 CLI、state 或运行逻辑里替你猜模型名，也不会用 `provider.example_models` 当 fallback。`models list` 只显示服务端实时返回的 ID；`models use` 只写入你明确选择的 ID。
+
+查看配置位置：
+
+```powershell
+mini-agent config where --profile <profile> --role main
+```
+
+默认 `config show` 不显示具体模型值：
+
+```powershell
+mini-agent config show --profile <profile>
+mini-agent config show --profile <profile> --show-model
+```
+
+## 一次配置，后续启动
+
+```powershell
+mini-agent use --profile <profile> --agent default
+mini-agent status
+mini-agent start   # 等价文本交互
+mini-agent chat    # 等价文本交互
+mini-agent speak   # dummy 语音交互
+```
+
+`.mini-agent/state.json` 只保存 `default_profile`、`default_agent`、`default_mode`、`config_dir`，不保存模型名、base_url、API Key 或示例模型。
+
+## Agent 自定义
+
+复制 `config/agents.yaml.example` 为 `config/agents.yaml` 后，可以配置多个 Agent：
 
 ```yaml
-profiles:
-  deepseek:
-    roles:
-      main:
-        provider: deepseek
-        model: "deepseek-chat"
+agents:
+  default:
+    name: MiniAgent
+    role: 通用轻量任务助手
+    identity: 你是一个可嵌入项目的轻量 Agent Core。
+    capabilities: [解释配置, 调用 safe 工具, 拆解任务]
+    boundaries: [不保存密钥, 不绕过 danger 限制]
 ```
 
-## 本地模型配置示例
+启动时选择：
 
-适用于 Ollama、LM Studio、llama.cpp server、vLLM：
+```powershell
+mini-agent text --profile <profile> --agent default
+mini-agent use --profile <profile> --agent ros2_robot
+```
+
+## 工具与扩展
+
+查看工具：
+
+```powershell
+mini-agent tools list --profile <profile>
+mini-agent tools describe web_search --profile <profile>
+```
+
+`config/tools.yaml` 支持旧写法：
 
 ```yaml
-profiles:
-  local:
-    roles:
-      main:
-        provider: local
-        model: "qwen2.5:7b"
+enabled: [calculator, web_search]
 ```
 
-```bash
-mini-agent config check --profile local
-mini-agent text --profile local
+也支持 ToolPack 写法：
+
+```yaml
+toolpacks:
+  enabled: [builtin.basic, builtin.web]
+tools:
+  enabled: [calculator, fetch_url_text_public]
+extensions:
+  - module: project_tools.ros2_tools
+    factory: build_ros2_toolpack
 ```
 
-## 语音模式配置示例
+## ROS2 / 机器人接入
 
-默认 dummy 语音不需要麦克风：
+项目提供 `mini_agent.toolpacks.ros2_stub` 作为占位，不默认依赖 `rclpy`。真实 ROS2 工具建议放在你的机器人项目中，通过外部 ToolPack 注入。Agent 只做上层任务协调，不负责实时控制、急停、避障或底盘闭环。
 
-```bash
-mini-agent voice --profile local
-```
+## 文档
 
-真实 STT/TTS 的 adapter 和模型写在 `config/models.yaml` 的 `stt` / `tts` 角色里；音频设备写在 `config/voice.yaml`。
-
-## 内置技能库
-
-| 分组    | 默认状态   | 说明                                       |
-| ------- | ---------- | ------------------------------------------ |
-| safe    | 可默认启用 | 计算、时间、格式化、摘要等只读或低风险能力 |
-| confirm | 默认不启用 | 写入记忆、写文件、控制 mock LED 等需要确认 |
-| danger  | 默认不注册 | shell 执行等高风险能力                     |
-
-默认 safe 技能包含 `web_search`、`weather_open_meteo`；`fetch_url_text` 只在 `online` profile 默认开启。
-
-详细列表和自定义工具写法见 [docs/skills.md](docs/skills.md)。
-
-## MCP Profile
-
-| Profile     | 用途                              | 默认     |
-| ----------- | --------------------------------- | -------- |
-| `minimal` | 不启用 MCP                        | 空       |
-| `online`  | time、fetch、search、weather      | 全部关闭 |
-| `dev`     | GitHub、filesystem、git、context7 | 全部关闭 |
-| `danger`  | playwright、shell、docker         | 全部关闭 |
-| `edge`    | 边缘设备轻量占位                  | 全部关闭 |
-
-默认联网不是 MCP。MCP 只做高级可选配置、校验、进程封装和工具桥接预留，不实现真实 MCP `tools/list` / `tools/call`。
-
-## ARM / 嵌入式扩展建议
-
-- Agent Core 保持 Python 轻量服务。
-- 本地 LLM 走 OpenAI-compatible 网关。
-- STT 可接 whisper.cpp 或 sherpa-onnx。
-- TTS 可接 Piper 或 sherpa-onnx TTS。
-- 硬件能力通过 HTTP、Unix Socket、串口网关、ROS2 Service 或 `edge/cpp_tool_runtime` 暴露。
-
-## 安全说明
-
-- 不要把真实 API Key 写入 YAML。
-- `config show` 只显示环境变量是否存在，不打印真实 Key。
-- MCP 默认关闭，filesystem 必须配置 sandbox。
-- shell、docker、playwright 和 danger 技能默认关闭。
-- 模型名由用户自己填写，模板不会替你选择生产模型。
-
-## 开发者文档
-
-- [快速开始](docs/quickstart.md)
-- [配置指南](docs/configuration.md)
-- [技能库说明](docs/skills.md)
-- [Edge Runtime 占位](edge/README.md)
+- [快速开始](docs/快速开始.md)
+- [配置指南](docs/配置指南.md)
+- [Agent与扩展](docs/Agent与扩展.md)
+- [ROS2接入](docs/ROS2接入.md)
+- [模型示例参考](docs/模型示例参考.md)

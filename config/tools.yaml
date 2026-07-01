@@ -43,7 +43,7 @@ profiles:
     allow_danger: false
 
   online:
-    enabled: [calculator, get_time_local, system_status, tool_list, web_search, fetch_url_text, weather_open_meteo]
+    enabled: [calculator, get_time_local, system_status, tool_list, web_search, fetch_url_text_public, weather_open_meteo]
     allow_danger: false
 
   edge:

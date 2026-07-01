@@ -13,6 +13,7 @@ from mini_agent.adapters.tts_piper import PiperTTS
 from mini_agent.config.env import read_env
 from mini_agent.config.schema import AppProfileConfig, ModelRoleConfig, ProviderConfig
 from mini_agent.core.agent import Agent
+from mini_agent.core.agent_spec import AgentSpecConfig
 from mini_agent.core.guard import ToolGuard
 from mini_agent.core.status import StatusSink
 from mini_agent.skills.registry import build_tool_registry
@@ -58,7 +59,9 @@ class STTFactory:
         if adapter == "dummy":
             return DummySTT()
         if adapter == "openai":
-            return OpenAISTT(api_key=read_env(cfg.api_key_env), model=cfg.model or "whisper-1")
+            if not cfg.model:
+                raise ValueError(f"profile {self.config.profile!r} 的 {role}.model 必填；请显式配置 STT 模型 ID。")
+            return OpenAISTT(api_key=read_env(cfg.api_key_env), model=cfg.model)
         if adapter == "whisper_cpp":
             return WhisperCppSTT(binary_path=cfg.binary_path, model_path=cfg.model_path)
         if adapter == "sherpa_onnx":
@@ -76,19 +79,26 @@ class TTSFactory:
         if adapter == "dummy":
             return DummyTTS()
         if adapter == "openai":
-            return OpenAITTS(api_key=read_env(cfg.api_key_env), model=cfg.model or "gpt-4o-mini-tts", voice=cfg.voice)
+            if not cfg.model:
+                raise ValueError(f"profile {self.config.profile!r} 的 {role}.model 必填；请显式配置 TTS 模型 ID。")
+            return OpenAITTS(api_key=read_env(cfg.api_key_env), model=cfg.model, voice=cfg.voice)
         if adapter == "piper":
             return PiperTTS(binary_path=cfg.binary_path, model_path=cfg.model_path)
         raise ValueError(f"Unknown TTS adapter: {adapter}")
 
 
-def build_agent_from_profile(config: AppProfileConfig, status_sink: StatusSink | None = None) -> Agent:
+def build_agent_from_profile(
+    config: AppProfileConfig,
+    status_sink: StatusSink | None = None,
+    agent_spec: AgentSpecConfig | None = None,
+) -> Agent:
     llm = LLMFactory(config).create("main")
-    tools = build_tool_registry(config.tools.enabled)
+    tools = build_tool_registry(config.tools)
+    system_prompt = agent_spec.to_system_prompt() if agent_spec else config.agent.system_prompt
     return Agent(
         llm=llm,
         tools=tools,
-        system_prompt=config.agent.system_prompt,
+        system_prompt=system_prompt,
         max_steps=config.agent.max_steps,
         guard=ToolGuard(allow_danger=config.tools.allow_danger),
         session_max_messages=config.agent.max_messages,

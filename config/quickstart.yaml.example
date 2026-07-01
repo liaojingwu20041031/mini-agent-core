@@ -3,10 +3,11 @@
 # 不配置 MCP，不启用危险工具，不写真实 API Key。
 
 profile: local                # 你准备使用的 profile，例如 local、qwen、deepseek、kimi、glm、siliconflow。
+agent: default                # Agent 身份配置名，对应 config/agents.yaml。
 
 model:
   provider: ""                # 必填：provider 名，例如 local、qwen、deepseek、kimi、glm、siliconflow、custom。
-  model: ""                   # 必填：模型名由你自己填写，例如 qwen-plus、deepseek-chat、glm-4.5。
+  model: ""                   # 必填：模型 ID 由你自己填写，优先使用 models list 或服务商控制台返回值。
   api_key_env: ""             # 只能写环境变量名，不能写真实 Key；本地模型可留空。
   base_url: ""                # 可选：一般留空，使用 provider preset；自定义服务才填写。
   timeout: 30                 # 请求超时时间，单位秒。
@@ -15,10 +16,13 @@ model:
 agent:
   max_steps: 5                # 单轮最多模型/工具循环次数。
   max_messages: 40            # 最多保留消息数。
-  system_prompt: You are a helpful lightweight AI agent.
+  system_prompt: You are a helpful lightweight AI agent.  # fallback；身份和边界优先看 agents.yaml。
 
 tools:
-  enabled: [calculator, get_time_local, tool_list, web_search, weather_open_meteo]  # 默认 safe 联网：搜索和天气。
+  toolpacks:
+    enabled: [builtin.basic, builtin.text, builtin.web, builtin.weather]
+  tools:
+    enabled: [calculator, get_time_local, tool_list, web_search, weather_open_meteo]
   allow_danger: false         # 风险：不要默认开启危险工具。
 
 voice:

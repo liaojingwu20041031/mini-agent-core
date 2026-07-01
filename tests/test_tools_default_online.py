@@ -18,5 +18,5 @@ def test_standard_profiles_default_online_safe_tools():
 def test_minimal_and_online_tool_profiles():
     assert "web_search" not in _names("minimal")
     online = _names("online")
-    assert {"web_search", "fetch_url_text", "weather_open_meteo"}.issubset(online)
+    assert {"web_search", "fetch_url_text_public", "weather_open_meteo"}.issubset(online)
     assert "dangerous_shell" not in online

@@ -58,7 +58,7 @@ def test_openai_compatible_client_wraps_http_errors(monkeypatch):
         return FakeResponse(status_code=429, text="rate limited")
 
     monkeypatch.setattr(httpx, "post", fake_post)
-    client = OpenAICompatibleClient.from_provider(provider="qwen", api_key="key", model="qwen-plus")
+    client = OpenAICompatibleClient.from_provider(provider="qwen", api_key="key", model="explicit-test-model")
 
     with pytest.raises(AgentError) as exc:
         client.chat([Message(role="user", content="hi")])

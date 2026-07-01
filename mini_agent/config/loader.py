@@ -17,6 +17,7 @@ from mini_agent.config.schema import (
 )
 
 CONFIG_FILES = ("providers", "models", "agent", "voice", "tools", "mcp")
+OPTIONAL_INIT_FILES = ("agents",)
 
 
 def _read_yaml(path: Path) -> dict[str, Any]:
@@ -96,6 +97,9 @@ def load_profile_config(config_dir: str | Path = "config", profile: str = "local
     models = {role: _role_config(role, item or {}) for role, item in models_raw.items()}
     agent_raw = merged["agent"]
     tools_raw = merged["tools"]
+    toolpacks_raw = tools_raw.get("toolpacks") or {}
+    tools_section_raw = tools_raw.get("tools") or {}
+    enabled_tools = tools_section_raw.get("enabled", tools_raw.get("enabled", ()))
     return AppProfileConfig(
         profile=profile,
         providers=providers,
@@ -107,7 +111,9 @@ def load_profile_config(config_dir: str | Path = "config", profile: str = "local
             system_prompt=str(agent_raw.get("system_prompt", "You are a helpful lightweight AI agent.")),
         ),
         tools=ToolsConfig(
-            enabled=tuple(tools_raw.get("enabled", ()) or ()),
+            enabled=tuple(enabled_tools or ()),
+            toolpacks_enabled=tuple(toolpacks_raw.get("enabled", ()) or ()),
+            extensions=tuple(tools_raw.get("extensions", ()) or ()),
             allow_danger=bool(tools_raw.get("allow_danger", False)),
         ),
         voice=merged["voice"],

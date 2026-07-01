@@ -12,7 +12,7 @@ profiles:
         base_url: http://localhost:11434/v1  # 必填：本地服务地址，例如 Ollama。
         api_key_env: ""                      # 可选：本地服务通常不需要 Key。
         aliases: [ollama, lmstudio]          # 可选：别名。
-        example_models: [qwen2.5:7b, llama3.1:8b]  # 示例模型名，仅供参考。
+        # example_models 仅适合写在 docs/模型示例参考.md，运行逻辑不会读取它作为默认值。
 
   # 国内/远程 provider 默认使用代码内置 preset，这里留空即可。
   # 如果只想改环境变量名，可以只覆盖 api_key_env；base_url 会继续继承内置 preset。
@@ -49,4 +49,4 @@ profiles:
       local:
         base_url: http://127.0.0.1:8000/v1
         api_key_env: ""
-        example_models: [edge-model]
+        # example_models 仅适合写在 docs/模型示例参考.md，运行逻辑不会读取它作为默认值。

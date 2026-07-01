@@ -24,13 +24,26 @@ class ToolDefinition:
     risk_level: RiskLevel = "safe"
     parameters: dict[str, Any] = field(default_factory=dict)
     timeout: float | None = None
+    title: str = ""
+    category: str = "general"
+    tags: tuple[str, ...] = ()
+    when_to_use: str = ""
+    when_not_to_use: str = ""
+    examples: tuple[str, ...] = ()
+    output_schema: dict[str, Any] | None = None
+    namespace: str = "builtin"
 
     def openai_schema(self) -> dict[str, Any]:
+        compact_description = self.description.strip()
+        if self.when_to_use:
+            compact_description = f"{compact_description} Use when: {self.when_to_use.strip()}"
+        if len(compact_description) > 500:
+            compact_description = compact_description[:497].rstrip() + "..."
         return {
             "type": "function",
             "function": {
                 "name": self.name,
-                "description": self.description,
+                "description": compact_description,
                 "parameters": self.parameters,
             },
         }
@@ -90,6 +103,14 @@ def tool(
     description: str | None = None,
     risk_level: RiskLevel = "safe",
     timeout: float | None = None,
+    title: str = "",
+    category: str = "general",
+    tags: tuple[str, ...] | list[str] = (),
+    when_to_use: str = "",
+    when_not_to_use: str = "",
+    examples: tuple[str, ...] | list[str] = (),
+    output_schema: dict[str, Any] | None = None,
+    namespace: str = "builtin",
 ) -> Callable[..., Any]:
     """Decorate a function as an Agent tool."""
 
@@ -103,6 +124,14 @@ def tool(
             risk_level=risk_level,
             parameters=schema_from_signature(target),
             timeout=timeout,
+            title=title,
+            category=category,
+            tags=tuple(tags),
+            when_to_use=when_to_use,
+            when_not_to_use=when_not_to_use,
+            examples=tuple(examples),
+            output_schema=output_schema,
+            namespace=namespace,
         )
         return target
 

@@ -17,7 +17,7 @@ def test_profile_config_loads_nested_yaml():
 
     assert config.role("main").provider == "local"
     assert config.role("main").model == ""
-    assert config.providers["local"].example_models
+    assert config.providers["local"].example_models == ()
 
 
 def test_profile_check_fails_when_main_model_empty(tmp_path):
@@ -67,7 +67,7 @@ def test_qwen_check_explains_wrong_env_name(tmp_path, monkeypatch):
     config = load_profile_config(
         _copy_config_with_models(
             tmp_path,
-            "profiles:\n  qwen:\n    roles:\n      main:\n        provider: qwen\n        model: qwen-plus\n",
+            "profiles:\n  qwen:\n    roles:\n      main:\n        provider: qwen\n        model: test-model\n",
         ),
         "qwen",
     )
