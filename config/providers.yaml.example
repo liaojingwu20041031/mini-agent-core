@@ -3,6 +3,9 @@
 # 每个 provider 只描述连接方式，不替你选择模型。
 # API Key 只能写环境变量名，不能写真实 Key。
 profiles:
+  minimal:
+    providers: {}
+
   # local：本地 OpenAI-compatible 服务，例如 Ollama、LM Studio、llama.cpp server、vLLM。
   local:
     providers:
@@ -13,6 +16,10 @@ profiles:
         example_models: [qwen2.5:7b, llama3.1:8b]  # 示例模型名，仅供参考。
 
   # qwen：阿里云百炼 / DashScope，默认使用内置 base_url 和 DASHSCOPE_API_KEY。
+  # 注意：QWEN_API_KEY 不是默认变量名。如果你非要用这个名字，可以只覆盖 api_key_env：
+  # providers:
+  #   qwen:
+  #     api_key_env: QWEN_API_KEY
   qwen:
     providers: {}
 
@@ -34,6 +41,10 @@ profiles:
 
   # remote：OpenAI 或其他远程通用服务。
   remote:
+    providers: {}
+
+  # online：联网工具 profile，模型 provider 默认可复用 local 或按需覆盖。
+  online:
     providers: {}
 
   # edge：ARM / 嵌入式设备常用，本地网关地址按实际设备修改。

@@ -14,6 +14,7 @@ from mini_agent.config.env import read_env
 from mini_agent.config.schema import AppProfileConfig, ModelRoleConfig, ProviderConfig
 from mini_agent.core.agent import Agent
 from mini_agent.core.guard import ToolGuard
+from mini_agent.core.status import StatusSink
 from mini_agent.skills.registry import build_tool_registry
 
 
@@ -25,7 +26,10 @@ class LLMFactory:
         model = self.config.role(role)
         provider = self._provider_for(model)
         if not model.model:
-            raise ValueError(f"{role}.model is required")
+            raise ValueError(
+                f"profile {self.config.profile!r} 的 {role}.model 必填；"
+                f"请编辑 config/models.yaml 中的 {self.config.profile}.{role}.model。"
+            )
         base_url = model.base_url or provider.base_url
         api_key_env = model.api_key_env or provider.api_key_env
         return OpenAICompatibleClient(
@@ -40,7 +44,7 @@ class LLMFactory:
 
     def _provider_for(self, model: ModelRoleConfig) -> ProviderConfig:
         if model.provider not in self.config.providers:
-            raise KeyError(f"Unknown provider for {model.role}: {model.provider}")
+            raise KeyError(f"profile {self.config.profile!r} 的 {model.role}.provider 未配置：{model.provider}")
         return self.config.providers[model.provider]
 
 
@@ -78,7 +82,7 @@ class TTSFactory:
         raise ValueError(f"Unknown TTS adapter: {adapter}")
 
 
-def build_agent_from_profile(config: AppProfileConfig) -> Agent:
+def build_agent_from_profile(config: AppProfileConfig, status_sink: StatusSink | None = None) -> Agent:
     llm = LLMFactory(config).create("main")
     tools = build_tool_registry(config.tools.enabled)
     return Agent(
@@ -89,4 +93,5 @@ def build_agent_from_profile(config: AppProfileConfig) -> Agent:
         guard=ToolGuard(allow_danger=config.tools.allow_danger),
         session_max_messages=config.agent.max_messages,
         tool_result_max_chars=config.agent.tool_result_max_chars,
+        status_sink=status_sink,
     )

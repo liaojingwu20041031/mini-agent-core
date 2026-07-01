@@ -107,6 +107,19 @@ mini-agent config check --profile qwen
 mini-agent text --profile qwen
 ```
 
+联网实测：
+
+```text
+> 搜索一下 mini-agent-core 是什么
+> 查询武汉今天的天气
+```
+
+确认当前 profile 启用了哪些工具：
+
+```bash
+mini-agent tools list --profile qwen
+```
+
 ## 使用 DeepSeek
 
 Windows PowerShell：
@@ -151,6 +164,26 @@ mini-agent voice --profile local
 
 如果 `local.main.model` 还没填，先按本地模型章节填写模型名。
 
+## 状态显示
+
+文本模式默认显示简洁状态，方便确认模型和工具正在运行：
+
+```bash
+mini-agent text --profile qwen
+```
+
+如果你要嵌入其它系统，想关闭控制台状态：
+
+```bash
+mini-agent text --profile qwen --no-status
+```
+
+调试底层日志时再开启：
+
+```bash
+mini-agent text --profile qwen --debug
+```
+
 ## 注册第一个工具
 
 ```python
@@ -167,7 +200,7 @@ print(registry.list()[0].name)
 
 ## 常见错误排查
 
-`main.model is required`：
+`main.model 必填`：
 
 ```text
 说明 config/models.yaml 的当前 profile 没填 main.model。
@@ -202,3 +235,18 @@ curl http://localhost:11434/v1/models
 ```
 
 确认 base_url、端口和本地服务是否启动。
+
+profile 混用：
+
+```text
+如果你运行 mini-agent config check --profile qwen，只代表 qwen 有效。
+再运行 mini-agent text --profile deepseek 时，deepseek 仍然需要单独填写模型名和 API Key。
+```
+
+联网工具失败：
+
+```text
+web_search 返回 timeout / empty_result / http_error 时，说明免费搜索页解析失败或网络不可达。
+fetch_url_text 返回 blocked_private_url 时，说明目标是内网或解析到了私有 IP。
+weather_open_meteo 返回 city_not_found 时，说明 Open-Meteo 没找到该城市。
+```

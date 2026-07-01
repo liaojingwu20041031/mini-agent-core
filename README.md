@@ -22,15 +22,16 @@
 
 ## 核心特性
 
-| 能力 | 说明 |
-| --- | --- |
+| 能力         | 说明                                                               |
+| ------------ | ------------------------------------------------------------------ |
 | 国内 AI 友好 | 内置 Qwen、DeepSeek、Kimi、GLM、SiliconFlow、local provider preset |
-| 统一模型入口 | 走 OpenAI-compatible Chat Completions |
-| Profile 配置 | `config/*.yaml` 管理模型、工具、语音、MCP |
-| 工具安全分层 | safe / confirm / danger 三类风险等级 |
-| 统一 CLI | `mini-agent init/text/voice/tools/mcp/config` |
-| 轻量语音 | 默认 dummy 语音，不要求麦克风和声卡 |
-| 嵌入式友好 | 保留 ARM / C++ edge runtime 扩展方向 |
+| 统一模型入口 | 走 OpenAI-compatible Chat Completions                              |
+| Profile 配置 | `config/*.yaml` 管理模型、工具、语音、MCP                        |
+| 工具安全分层 | safe / confirm / danger 三类风险等级                               |
+| 默认联网     | safe 工具默认提供搜索和天气，不启动 MCP                            |
+| 统一 CLI     | `mini-agent init/text/voice/tools/mcp/config`                    |
+| 轻量语音     | 默认 dummy 语音，不要求麦克风和声卡                                |
+| 嵌入式友好   | 保留 ARM / C++ edge runtime 扩展方向                               |
 
 ## 适合什么场景
 
@@ -59,14 +60,14 @@ python -m pip install -e ".[dev]"
 
 初始化配置。先选择你要用的 profile，不默认绑定任何一家模型厂商：
 
-| 场景 | profile | API Key 环境变量 | 模型名示例 |
-| --- | --- | --- | --- |
-| 本地 Ollama / LM Studio / llama.cpp | `local` | 通常不需要 | `qwen2.5:7b` |
-| 阿里云百炼 / DashScope | `qwen` | `DASHSCOPE_API_KEY` | `qwen-plus` |
-| DeepSeek | `deepseek` | `DEEPSEEK_API_KEY` | `deepseek-chat` |
-| Moonshot Kimi | `kimi` | `MOONSHOT_API_KEY` | `kimi-k2.6` |
-| 智谱 GLM | `glm` | `ZHIPUAI_API_KEY` | `glm-4.5` |
-| 硅基流动 | `siliconflow` | `SILICONFLOW_API_KEY` | `deepseek-ai/DeepSeek-V3.1` |
+| 场景                                | profile         | API Key 环境变量        | 模型名示例                    |
+| ----------------------------------- | --------------- | ----------------------- | ----------------------------- |
+| 本地 Ollama / LM Studio / llama.cpp | `local`       | 通常不需要              | `qwen2.5:7b`                |
+| 阿里云百炼 / DashScope              | `qwen`        | `DASHSCOPE_API_KEY`   | `qwen-plus`                 |
+| DeepSeek                            | `deepseek`    | `DEEPSEEK_API_KEY`    | `deepseek-chat`             |
+| Moonshot Kimi                       | `kimi`        | `MOONSHOT_API_KEY`    | `kimi-k2.6`                 |
+| 智谱 GLM                            | `glm`         | `ZHIPUAI_API_KEY`     | `glm-4.5`                   |
+| 硅基流动                            | `siliconflow` | `SILICONFLOW_API_KEY` | `deepseek-ai/DeepSeek-V3.1` |
 
 下面以 DeepSeek 演示一次完整流程；你也可以把 `deepseek` 换成 `qwen`、`kimi`、`glm`、`siliconflow` 或 `local`：
 
@@ -106,6 +107,29 @@ mini-agent voice --profile deepseek
 
 更详细的新手教程见 [docs/quickstart.md](docs/quickstart.md)。
 
+## 默认联网能力
+
+标准 profile 默认启用轻量 safe 联网工具：`web_search` 和 `weather_open_meteo`。它们不需要 Tavily、Brave、SerpAPI 或 Google CSE Key，也不会启动 MCP server。
+
+`online` profile 额外启用 `fetch_url_text`，用于抓取公开网页正文。MCP 搜索仍是高级扩展，默认 disabled。
+
+## 状态显示
+
+`mini-agent text` 默认显示简洁状态，方便确认模型和工具正在工作：
+
+```text
+[llm] 请求中...
+[llm] 完成 1320ms
+[tool] web_search 开始
+[tool] web_search 完成 480ms
+```
+
+嵌入其他系统时可以关闭控制台状态：
+
+```bash
+mini-agent text --profile qwen --no-status
+```
+
 ## 架构概览
 
 ```mermaid
@@ -140,14 +164,14 @@ print(registry.list()[0].name)
 
 ## 配置文件说明
 
-| 文件 | 用途 |
-| --- | --- |
-| `config/providers.yaml` | 覆盖或扩展 provider 连接信息 |
-| `config/models.yaml` | 按 profile 配置 `main/stt/tts/small/embedding` |
-| `config/agent.yaml` | Agent 步数、上下文、系统提示词 |
-| `config/voice.yaml` | 音频设备等语音运行参数 |
-| `config/tools.yaml` | 启用 safe/confirm/danger 技能 |
-| `config/mcp.yaml` | MCP server profile，默认关闭 |
+| 文件                      | 用途                                            |
+| ------------------------- | ----------------------------------------------- |
+| `config/providers.yaml` | 覆盖或扩展 provider 连接信息                    |
+| `config/models.yaml`    | 按 profile 配置`main/stt/tts/small/embedding` |
+| `config/agent.yaml`     | Agent 步数、上下文、系统提示词                  |
+| `config/voice.yaml`     | 音频设备等语音运行参数                          |
+| `config/tools.yaml`     | 启用 safe/confirm/danger 技能                   |
+| `config/mcp.yaml`       | MCP server profile，默认关闭                    |
 
 `config/quickstart.yaml.example` 是一文件快速配置参考；当前运行时仍使用上面的六文件高级配置。完整说明见 [docs/configuration.md](docs/configuration.md)。
 
@@ -215,25 +239,27 @@ mini-agent voice --profile local
 
 ## 内置技能库
 
-| 分组 | 默认状态 | 说明 |
-| --- | --- | --- |
-| safe | 可默认启用 | 计算、时间、格式化、摘要等只读或低风险能力 |
+| 分组    | 默认状态   | 说明                                       |
+| ------- | ---------- | ------------------------------------------ |
+| safe    | 可默认启用 | 计算、时间、格式化、摘要等只读或低风险能力 |
 | confirm | 默认不启用 | 写入记忆、写文件、控制 mock LED 等需要确认 |
-| danger | 默认不注册 | shell 执行等高风险能力 |
+| danger  | 默认不注册 | shell 执行等高风险能力                     |
+
+默认 safe 技能包含 `web_search`、`weather_open_meteo`；`fetch_url_text` 只在 `online` profile 默认开启。
 
 详细列表和自定义工具写法见 [docs/skills.md](docs/skills.md)。
 
 ## MCP Profile
 
-| Profile | 用途 | 默认 |
-| --- | --- | --- |
-| `minimal` | 不启用 MCP | 空 |
-| `online` | time、fetch、search、weather | 全部关闭 |
-| `dev` | GitHub、filesystem、git、context7 | 全部关闭 |
-| `danger` | playwright、shell、docker | 全部关闭 |
-| `edge` | 边缘设备轻量占位 | 全部关闭 |
+| Profile     | 用途                              | 默认     |
+| ----------- | --------------------------------- | -------- |
+| `minimal` | 不启用 MCP                        | 空       |
+| `online`  | time、fetch、search、weather      | 全部关闭 |
+| `dev`     | GitHub、filesystem、git、context7 | 全部关闭 |
+| `danger`  | playwright、shell、docker         | 全部关闭 |
+| `edge`    | 边缘设备轻量占位                  | 全部关闭 |
 
-当前只做配置、校验、进程封装和工具桥接预留，不实现真实 MCP `tools/list` / `tools/call`。
+默认联网不是 MCP。MCP 只做高级可选配置、校验、进程封装和工具桥接预留，不实现真实 MCP `tools/list` / `tools/call`。
 
 ## ARM / 嵌入式扩展建议
 

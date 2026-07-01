@@ -10,6 +10,14 @@ from typing import Iterator
 
 
 LOGGER_NAME = "mini_agent"
+_DEBUG_ENABLED = False
+
+
+def configure_logging(debug: bool = False) -> None:
+    global _DEBUG_ENABLED
+    _DEBUG_ENABLED = debug
+    logger = get_logger()
+    logger.setLevel(logging.INFO if debug else logging.WARNING)
 
 
 def get_logger() -> logging.Logger:
@@ -18,7 +26,7 @@ def get_logger() -> logging.Logger:
         handler = logging.StreamHandler()
         handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
         logger.addHandler(handler)
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.INFO if _DEBUG_ENABLED else logging.WARNING)
     return logger
 
 
@@ -46,4 +54,3 @@ def trace_span(name: str, detail: str | None = None) -> Iterator[None]:
             logger.info("%s finished in %.1fms: %s", name, elapsed_ms, detail)
         else:
             logger.info("%s finished in %.1fms", name, elapsed_ms)
-

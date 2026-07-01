@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 from mini_agent.core.tools import ToolDefinition, ToolRegistry
-from mini_agent.skills.builtin import confirm, danger, safe
+from mini_agent.skills.builtin import confirm, danger, safe, weather, web
 
 SAFE_SKILLS = {
     "calculator": safe.calculator,
@@ -19,6 +19,9 @@ SAFE_SKILLS = {
     "system_status": safe.system_status,
     "config_get": safe.config_get,
     "tool_list": safe.tool_list,
+    "web_search": web.web_search,
+    "fetch_url_text": web.fetch_url_text,
+    "weather_open_meteo": weather.weather_open_meteo,
 }
 CONFIRM_SKILLS = {
     "memory_write": confirm.memory_write,

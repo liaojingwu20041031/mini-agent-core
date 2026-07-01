@@ -32,6 +32,8 @@
 | `glm` | 智谱 GLM |
 | `siliconflow` | 硅基流动 |
 | `remote` | OpenAI 或其他远程通用服务 |
+| `online` | 默认启用更多联网 safe 工具 |
+| `minimal` | 最小工具集，不默认联网 |
 | `edge` | ARM / 嵌入式占位 |
 
 ## 模型名必须自己填写
@@ -152,9 +154,16 @@ profiles:
 ```yaml
 profiles:
   local:
-    enabled: [calculator, get_time_local, tool_list]
+    enabled: [calculator, get_time_local, tool_list, web_search, weather_open_meteo]
     allow_danger: false
 ```
+
+默认联网能力是本地 safe skill：
+
+- 标准 profile 默认启用 `web_search` 和 `weather_open_meteo`。
+- `online` profile 额外启用 `fetch_url_text`。
+- `minimal` 不默认启用联网。
+- `edge` 只保留轻量 public-only 联网工具。
 
 不要默认开启 `allow_danger: true`。详细说明见 [skills.md](skills.md)。
 
@@ -162,10 +171,12 @@ profiles:
 
 MCP 默认关闭，因为它可能联网、读写文件或执行命令。
 
+默认联网不是 MCP：`web_search`、`fetch_url_text`、`weather_open_meteo` 是内置 safe skill。MCP 搜索只作为高级可选扩展，默认 disabled。
+
 推荐分层：
 
 - `minimal`：不启用 MCP。
-- `online`：time、fetch、tavily_search、weather_open_meteo。
+- `online`：time、fetch、tavily_search、weather_open_meteo，以及可选 duckduckgo/free-search/one-search MCP。
 - `dev`：github、filesystem、git、context7。
 - `danger`：playwright、shell、docker。
 - `edge`：time、fetch 占位。

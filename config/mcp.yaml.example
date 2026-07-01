@@ -46,6 +46,26 @@ profiles:
         transport: stdio
         command: weather-open-meteo-mcp
         risk_level: safe      # 风险：联网天气查询。
+      duckduckgo_mcp:
+        enabled: false        # 高级可选：轻量搜索 MCP；默认联网走本地 safe skill，不启动 MCP。
+        transport: stdio
+        command: npx
+        args: ["-y", "duckduckgo-mcp"]
+        risk_level: safe
+      free_search_mcp:
+        enabled: false        # 高级可选：功能强但依赖 Playwright/解析库等，不建议默认启用。
+        transport: stdio
+        command: uvx
+        args: ["search-mcp"]
+        risk_level: safe
+      one_search_mcp:
+        enabled: false        # 高级可选：多源搜索 MCP，Node/浏览器能力较重。
+        transport: stdio
+        command: npx
+        args: ["-y", "one-search-mcp"]
+        env:
+          SEARCH_PROVIDER: duckduckgo
+        risk_level: safe
 
   # dev：开发相关能力，默认关闭。
   dev:

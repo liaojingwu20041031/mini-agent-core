@@ -17,6 +17,32 @@
 | `system_status` | 查看轻量系统状态 |
 | `config_get` | 查询配置项 |
 | `tool_list` | 列出工具 |
+| `web_search` | 无 Key 搜索公开网页，只返回来源和摘要 |
+| `fetch_url_text` | 抓取公开 URL 正文，默认禁止内网 |
+| `weather_open_meteo` | 查询 Open-Meteo 天气 |
+
+## 默认联网工具
+
+默认联网走 safe skill，不启动 MCP server。
+
+| 技能 | 默认 profile | 边界 |
+| --- | --- | --- |
+| `web_search` | local/qwen/deepseek/kimi/glm/siliconflow/remote/online/edge | DuckDuckGo 免费页面解析，稳定性不如商业搜索 API |
+| `weather_open_meteo` | local/qwen/deepseek/kimi/glm/siliconflow/remote/online | Open-Meteo 免费 API，适合原型和非商业场景 |
+| `fetch_url_text` | online | 只抓公网 http/https，禁止 localhost、私有网段和 metadata IP |
+
+联网工具只返回结构化结果，不替用户伪造事实结论。高可靠或商业场景请换成正式搜索 API 或付费天气 endpoint。
+
+常见失败：
+
+| 错误 | 含义 |
+| --- | --- |
+| `timeout` | 网络请求超时 |
+| `empty_result` | 搜索页没有解析到结果 |
+| `http_error` / `403` | 远端拒绝或不可达 |
+| `city_not_found` | Open-Meteo 找不到城市 |
+| `blocked_private_url` | URL 是内网、localhost 或解析到私有 IP |
+| `parse_error` | 返回格式不符合预期 |
 
 ## confirm 技能
 
@@ -47,6 +73,8 @@ profiles:
     enabled:
       - calculator
       - get_time_local
+      - web_search
+      - weather_open_meteo
       - tool_list
     allow_danger: false
 ```

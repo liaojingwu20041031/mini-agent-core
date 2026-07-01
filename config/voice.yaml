@@ -4,10 +4,12 @@ profiles:
   local:
     audio_input_device: ""   # 可选：真实麦克风设备名；dummy 模式留空。
     audio_output_device: ""  # 可选：真实扬声器设备名；dummy 模式留空。
+  minimal: {}
   qwen: {}
   deepseek: {}
   kimi: {}
   glm: {}
   siliconflow: {}
   remote: {}
+  online: {}
   edge: {}

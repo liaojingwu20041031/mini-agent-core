@@ -1,105 +1,155 @@
 # 模型角色配置模板。
 # 复制为 config/models.yaml 后使用。
-# 必填提醒：所有 profile 的 main.model 默认都是空字符串，必须由你自己选择并填写。
-# API Key 只能写环境变量名，不能写真实 Key。
+#
+# 新手只看这里：
+# 1. 先决定你要跑哪个 profile：local / qwen / deepseek / kimi / glm / siliconflow。
+# 2. 只需要先填写该 profile 下面的 roles.main.model。
+# 3. provider 通常不用改，它决定走哪个模型服务；API Key 不写在本文件里。
+# 4. embedding / small / 真实 STT / 真实 TTS 都是进阶项，第一次上手可以保持空字符串 ""。
+#
+# 字段速查：
+# - provider：模型服务提供方名称，对应 config/providers.yaml 或内置 provider preset。
+# - model：模型名。main.model 是必填；空字符串表示“还没配置，不能运行文本 Agent”。
+# - timeout：模型请求超时时间，单位秒；网络慢或本地模型慢时可以调大。
+# - temperature：采样温度；0-0.3 更稳定，0.7 以上更发散。
+# - adapter：非 LLM 适配器名称；STT/TTS 用 dummy 表示文字模拟，不需要麦克风/音箱。
+# - api_key_env：环境变量名，只能写变量名，不能写真实 API Key。
+# - voice：TTS 音色名，只在真实 TTS adapter 中使用。
 profiles:
-  # local：本地 OpenAI-compatible 服务，例如 Ollama、LM Studio、llama.cpp server、vLLM。
+  # minimal：最小本地 profile，不默认联网；用于只验证 Agent Core。
+  minimal:
+    roles:
+      main:
+        provider: local        # 必填：默认指向本地 OpenAI-compatible 服务。
+        model: ""              # 必填：首次运行前填写本地模型名。
+      stt:
+        adapter: dummy
+      tts:
+        adapter: dummy
+
+  # online：联网工具 profile。模型仍由你自己选择，不默认绑定厂商。
+  online:
+    roles:
+      main:
+        provider: local        # 必填：默认本地模型；也可改成 qwen/deepseek 等。
+        model: ""              # 必填：首次运行前填写模型名。
+      stt:
+        adapter: dummy
+      tts:
+        adapter: dummy
+
+  # local：本地 OpenAI-compatible 服务。
+  # 适合 Ollama、LM Studio、llama.cpp server、vLLM、xinference 等本地服务。
+  # 上手步骤：
+  # 1. 先启动本地服务，例如 Ollama 默认 http://localhost:11434/v1。
+  # 2. 把 main.model 改成本地服务里实际存在的模型名。
+  # 3. 本地服务通常不需要 API Key。
   local:
     roles:
       main:
-        provider: local        # 必填：provider 名，对应 providers.yaml。
-        model: ""              # 必填：例如 qwen2.5:7b。
-        timeout: 30            # 请求超时时间，单位秒。
-        temperature: 0.2       # 模型采样温度，建议 0.1-0.7。
+        provider: local        # 必填：使用 providers.yaml 里的 local provider；一般不用改。
+        model: ""              # 必填：本地聊天模型名，例如 qwen2.5:7b、llama3.1:8b；首次运行前必须填写。
+        timeout: 30            # 可选：请求超时时间，单位秒；本地大模型较慢时可改成 60 或 120。
+        temperature: 0.2       # 可选：回复随机性；新手建议 0.2，想更稳定可改 0。
       stt:
-        adapter: dummy         # STT 配置位置：dummy 表示不用真实麦克风。
+        adapter: dummy         # 可选：语音转文字；dummy 表示用键盘输入模拟语音，第一次上手不要改。
       tts:
-        adapter: dummy         # TTS 配置位置：dummy 表示不用真实扬声器。
+        adapter: dummy         # 可选：文字转语音；dummy 表示直接打印文字，第一次上手不要改。
       embedding:
-        provider: local        # 可选：向量模型 provider。
-        model: ""              # 可选：例如 bge-m3。
+        provider: local        # 进阶：向量模型 provider；只有做检索/RAG 时才需要。
+        model: ""              # 进阶可选：向量模型名，例如 bge-m3；不做检索就保持空。
       small:
-        provider: local        # 可选：轻量任务模型 provider。
-        model: ""              # 可选：例如 qwen2.5:1.5b。
+        provider: local        # 进阶：低成本小模型 provider；用于分类、改写等轻任务。
+        model: ""              # 进阶可选：小模型名，例如 qwen2.5:1.5b；不用就保持空。
 
   # qwen：阿里云百炼 / DashScope。
+  # 需要先在 PowerShell 设置：$env:DASHSCOPE_API_KEY="你的 API Key"
+  # 这里只填模型名，不填真实 Key。
   qwen:
     roles:
       main:
-        provider: qwen         # 必填：内置 qwen provider。
-        model: ""              # 必填：例如 qwen-plus。
+        provider: qwen         # 必填：使用内置 qwen provider preset；一般不用改。
+        model: ""              # 必填：阿里云百炼模型名，例如 qwen-plus、qwen-max；由你自己选择。
       stt:
-        adapter: dummy         # 默认 dummy，语音模式先走文字模拟。
+        adapter: dummy         # 可选：默认用文字模拟语音输入，快速上手不要改。
       tts:
-        adapter: dummy
+        adapter: dummy         # 可选：默认用文字模拟语音输出，快速上手不要改。
 
-  # deepseek：DeepSeek API。
+  # deepseek：DeepSeek OpenAI-compatible API。
+  # 需要先在 PowerShell 设置：$env:DEEPSEEK_API_KEY="你的 API Key"
   deepseek:
     roles:
       main:
-        provider: deepseek
-        model: ""              # 必填：例如 deepseek-chat。
+        provider: deepseek     # 必填：使用内置 deepseek provider preset；一般不用改。
+        model: ""              # 必填：DeepSeek 模型名，例如 deepseek-chat、deepseek-reasoner。
       stt:
-        adapter: dummy
+        adapter: dummy         # 可选：第一次上手保持 dummy。
       tts:
-        adapter: dummy
+        adapter: dummy         # 可选：第一次上手保持 dummy。
 
   # kimi：Moonshot Kimi。
+  # 需要先在 PowerShell 设置：$env:MOONSHOT_API_KEY="你的 API Key"
   kimi:
     roles:
       main:
-        provider: kimi
-        model: ""              # 必填：例如 kimi-k2.6。
+        provider: kimi         # 必填：使用内置 kimi provider preset；一般不用改。
+        model: ""              # 必填：Kimi 模型名，例如 kimi-k2.6；以平台控制台为准。
       stt:
-        adapter: dummy
+        adapter: dummy         # 可选：第一次上手保持 dummy。
       tts:
-        adapter: dummy
+        adapter: dummy         # 可选：第一次上手保持 dummy。
 
   # glm：智谱 GLM。
+  # 需要先在 PowerShell 设置：$env:ZHIPUAI_API_KEY="你的 API Key"
   glm:
     roles:
       main:
-        provider: glm
-        model: ""              # 必填：例如 glm-4.5。
+        provider: glm          # 必填：使用内置 glm provider preset；一般不用改。
+        model: ""              # 必填：GLM 模型名，例如 glm-4.5；以平台控制台为准。
       stt:
-        adapter: dummy
+        adapter: dummy         # 可选：第一次上手保持 dummy。
       tts:
-        adapter: dummy
+        adapter: dummy         # 可选：第一次上手保持 dummy。
 
   # siliconflow：硅基流动。
+  # 需要先在 PowerShell 设置：$env:SILICONFLOW_API_KEY="你的 API Key"
+  # 硅基流动可接入多个开源/国产模型，模型名通常带组织前缀。
   siliconflow:
     roles:
       main:
-        provider: siliconflow
-        model: ""              # 必填：例如 deepseek-ai/DeepSeek-V3.1。
+        provider: siliconflow  # 必填：使用内置 siliconflow provider preset；一般不用改。
+        model: ""              # 必填：例如 deepseek-ai/DeepSeek-V3.1；以硅基流动控制台为准。
       stt:
-        adapter: dummy
+        adapter: dummy         # 可选：第一次上手保持 dummy。
       tts:
-        adapter: dummy
+        adapter: dummy         # 可选：第一次上手保持 dummy。
 
-  # remote：远程文本、STT、TTS 示例。请确认费用和额度后再填写。
+  # remote：通用远程服务示例。
+  # 用于 OpenAI 或其他 OpenAI-compatible 远程服务。
+  # 风险提醒：远程模型、真实 STT、真实 TTS 都可能产生费用；确认额度后再填写。
   remote:
     roles:
       main:
-        provider: openai
-        model: ""              # 必填：例如 gpt-4o-mini。
+        provider: openai       # 必填：远程文本模型 provider；也可以改成 providers.yaml 里的自定义 provider。
+        model: ""              # 必填：聊天模型名，例如 gpt-4o-mini；模板不会替你选择。
       stt:
-        adapter: openai        # STT：真实语音转文字适配器。
-        api_key_env: OPENAI_API_KEY  # 只能写环境变量名，不能写真实 Key。
-        model: ""              # 必填：例如 whisper-1。
+        adapter: openai        # 进阶：真实语音转文字 adapter；不用真实语音就改回 dummy 或保持不用该 profile。
+        api_key_env: OPENAI_API_KEY  # 必填：环境变量名，不要写真实 Key。
+        model: ""              # 进阶必填：STT 模型名，例如 whisper-1。
       tts:
-        adapter: openai        # TTS：真实文字转语音适配器。
-        api_key_env: OPENAI_API_KEY
-        model: ""              # 必填：例如 gpt-4o-mini-tts。
-        voice: alloy           # TTS 音色。
+        adapter: openai        # 进阶：真实文字转语音 adapter；不用真实语音就保持 dummy profile。
+        api_key_env: OPENAI_API_KEY  # 必填：环境变量名，不要写真实 Key。
+        model: ""              # 进阶必填：TTS 模型名，例如 gpt-4o-mini-tts。
+        voice: alloy           # 可选：TTS 音色名；不同服务支持的音色不同。
 
-  # edge：ARM / 嵌入式设备上的轻量 profile。
+  # edge：ARM / 嵌入式部署占位。
+  # 适合把模型服务放在边缘设备或局域网网关上，仍然通过 OpenAI-compatible 接口访问。
   edge:
     roles:
       main:
-        provider: local
-        model: ""              # 必填：例如 edge-model。
+        provider: local        # 必填：默认复用 local provider；如端口不同，请改 providers.yaml 的 edge/local 配置。
+        model: ""              # 必填：边缘设备上实际部署的模型名，例如 edge-model。
       stt:
-        adapter: dummy
+        adapter: dummy         # 可选：边缘设备未接真实 STT 前保持 dummy。
       tts:
-        adapter: dummy
+        adapter: dummy         # 可选：边缘设备未接真实 TTS 前保持 dummy。

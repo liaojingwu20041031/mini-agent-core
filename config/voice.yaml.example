@@ -7,6 +7,7 @@ profiles:
   local:
     audio_input_device: ""   # 可选：真实麦克风设备名；dummy 模式留空。
     audio_output_device: ""  # 可选：真实扬声器设备名；dummy 模式留空。
+  minimal: {}                # 最小 profile，不默认联网。
 
   # 国内远程模型默认也先用 dummy 语音，避免新手被音频环境卡住。
   qwen: {}                   # 阿里云百炼 / DashScope。
@@ -15,4 +16,5 @@ profiles:
   glm: {}                    # 智谱 GLM。
   siliconflow: {}            # 硅基流动。
   remote: {}                 # 真实 STT/TTS 请到 models.yaml 的 remote.stt/remote.tts 填写。
+  online: {}                 # 联网工具 profile。
   edge: {}                   # ARM / 嵌入式设备可按需填写设备名。

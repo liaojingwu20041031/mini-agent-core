@@ -83,4 +83,19 @@ def config_get(key: str) -> dict[str, str]:
 
 @tool(description="List built-in tool names.")
 def tool_list() -> list[str]:
-    return ["calculator", "unit_convert", "format_json", "summarize_text", "extract_key_points", "translate_text", "plan_task", "get_time_local", "system_status", "config_get", "tool_list"]
+    return [
+        "calculator",
+        "unit_convert",
+        "format_json",
+        "summarize_text",
+        "extract_key_points",
+        "translate_text",
+        "plan_task",
+        "get_time_local",
+        "system_status",
+        "config_get",
+        "tool_list",
+        "web_search",
+        "fetch_url_text",
+        "weather_open_meteo",
+    ]

@@ -18,7 +18,7 @@ agent:
   system_prompt: You are a helpful lightweight AI agent.
 
 tools:
-  enabled: [calculator, get_time_local, tool_list]  # 新手建议只开 safe 技能。
+  enabled: [calculator, get_time_local, tool_list, web_search, weather_open_meteo]  # 默认 safe 联网：搜索和天气。
   allow_danger: false         # 风险：不要默认开启危险工具。
 
 voice:

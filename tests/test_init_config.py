@@ -28,3 +28,13 @@ def test_init_config_does_not_overwrite_existing(tmp_path):
 
     assert target.read_text(encoding="utf-8") == "keep: true\n"
 
+
+def test_init_qwen_explains_dashscope_env(tmp_path, capsys):
+    _write_examples(tmp_path)
+
+    assert main(["init", "--config-dir", str(tmp_path), "--profile", "qwen"]) == 0
+
+    output = capsys.readouterr().out
+    assert "DASHSCOPE_API_KEY" in output
+    assert "QWEN_API_KEY 不是默认变量名" in output
+    assert "--profile deepseek" in output

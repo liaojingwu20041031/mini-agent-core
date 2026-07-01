@@ -2,6 +2,9 @@
 # 用途：覆盖或扩展内置 provider preset。
 # 安全要求：api_key_env 只能写环境变量名，不能写真实 API Key。
 profiles:
+  minimal:
+    providers: {}
+
   # local：本地 OpenAI-compatible 服务。
   local:
     providers:
@@ -12,6 +15,19 @@ profiles:
         example_models: [qwen2.5:7b, llama3.1:8b]  # 示例模型名，仅供参考。
 
   # 国内/远程 provider 默认使用代码内置 preset，这里留空即可。
+  # 如果只想改环境变量名，可以只覆盖 api_key_env；base_url 会继续继承内置 preset。
+  # 示例：
+  # qwen:
+  #   providers:
+  #     qwen:
+  #       api_key_env: QWEN_API_KEY
+  #
+  # 默认变量名速查：
+  # - qwen 使用 DASHSCOPE_API_KEY，不是 QWEN_API_KEY。
+  # - deepseek 使用 DEEPSEEK_API_KEY。
+  # - kimi 使用 MOONSHOT_API_KEY。
+  # - glm 使用 ZHIPUAI_API_KEY。
+  # - siliconflow 使用 SILICONFLOW_API_KEY。
   qwen:
     providers: {}
   deepseek:
@@ -23,6 +39,8 @@ profiles:
   siliconflow:
     providers: {}
   remote:
+    providers: {}
+  online:
     providers: {}
 
   # edge：边缘设备上的本地推理服务地址。

@@ -5,10 +5,12 @@ profiles:
     max_messages: 40                     # 会话最多保留消息数，防止上下文无限增长。
     tool_result_max_chars: 4000          # 工具结果最大字符数，避免塞爆上下文。
     system_prompt: You are a helpful lightweight AI agent.  # 系统提示词。
+  minimal: *default_agent
   qwen: *default_agent
   deepseek: *default_agent
   kimi: *default_agent
   glm: *default_agent
   siliconflow: *default_agent
   remote: *default_agent
+  online: *default_agent
   edge: *default_agent

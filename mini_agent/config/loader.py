@@ -53,13 +53,14 @@ def _provider_configs(raw: dict[str, Any]) -> dict[str, ProviderConfig]:
     for name, item in (raw.get("providers") or {}).items():
         if not isinstance(item, dict):
             continue
+        base = providers.get(name)
         providers[name] = ProviderConfig(
             name=name,
-            base_url=str(item.get("base_url", "")),
-            api_key_env=str(item.get("api_key_env", "")),
-            aliases=tuple(item.get("aliases") or ()),
-            note=str(item.get("note", "")),
-            example_models=tuple(item.get("example_models") or ()),
+            base_url=str(item.get("base_url", base.base_url if base else "")),
+            api_key_env=str(item.get("api_key_env", base.api_key_env if base else "")),
+            aliases=tuple(item.get("aliases", base.aliases if base else ()) or ()),
+            note=str(item.get("note", base.note if base else "")),
+            example_models=tuple(item.get("example_models", base.example_models if base else ()) or ()),
         )
     return providers
 

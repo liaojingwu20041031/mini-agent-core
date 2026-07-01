@@ -15,6 +15,8 @@ import yaml
 from mini_agent.config.env import env_status
 from mini_agent.config.loader import CONFIG_FILES, load_profile_config
 from mini_agent.config.validator import validate_profile_config
+from mini_agent.core.status import ConsoleStatusSink, NullStatusSink
+from mini_agent.core.trace import configure_logging
 from mini_agent.interaction.text_cli import TextCLI
 from mini_agent.mcp.manager import MCPManager
 from mini_agent.models.factory import build_agent_from_profile
@@ -27,13 +29,48 @@ from mini_agent.voice.pipeline import VoicePipeline
 
 
 PROFILE_HINTS = {
-    "qwen": ("DASHSCOPE_API_KEY", "qwen.main.model，例如 qwen-plus"),
-    "deepseek": ("DEEPSEEK_API_KEY", "deepseek.main.model，例如 deepseek-chat"),
-    "kimi": ("MOONSHOT_API_KEY", "kimi.main.model，例如 kimi-k2.6"),
-    "glm": ("ZHIPUAI_API_KEY", "glm.main.model，例如 glm-4.5"),
-    "siliconflow": ("SILICONFLOW_API_KEY", "siliconflow.main.model，例如 deepseek-ai/DeepSeek-V3.1"),
-    "remote": ("OPENAI_API_KEY", "remote.main.model，例如 gpt-4o-mini"),
-    "local": ("", "local.main.model，例如 qwen2.5:7b"),
+    "qwen": {
+        "name": "阿里云百炼 / DashScope",
+        "env": "DASHSCOPE_API_KEY",
+        "model": "qwen.main.model，例如 qwen-plus",
+        "note": "QWEN_API_KEY 不是默认变量名；如果你用 DeepSeek Key，请改用 --profile deepseek。",
+    },
+    "deepseek": {
+        "name": "DeepSeek",
+        "env": "DEEPSEEK_API_KEY",
+        "model": "deepseek.main.model，例如 deepseek-chat",
+        "note": "DeepSeek Key 只配 deepseek profile，不会被 qwen profile 使用。",
+    },
+    "kimi": {
+        "name": "Moonshot Kimi",
+        "env": "MOONSHOT_API_KEY",
+        "model": "kimi.main.model，例如 kimi-k2.6",
+        "note": "",
+    },
+    "glm": {
+        "name": "智谱 GLM",
+        "env": "ZHIPUAI_API_KEY",
+        "model": "glm.main.model，例如 glm-4.5",
+        "note": "",
+    },
+    "siliconflow": {
+        "name": "硅基流动",
+        "env": "SILICONFLOW_API_KEY",
+        "model": "siliconflow.main.model，例如 deepseek-ai/DeepSeek-V3.1",
+        "note": "",
+    },
+    "remote": {
+        "name": "OpenAI 或其他远程兼容服务",
+        "env": "OPENAI_API_KEY",
+        "model": "remote.main.model，例如 gpt-4o-mini",
+        "note": "",
+    },
+    "local": {
+        "name": "本地 OpenAI-compatible 服务",
+        "env": "",
+        "model": "local.main.model，例如 qwen2.5:7b",
+        "note": "本地模型通常不需要 API Key，但要先启动 Ollama、LM Studio 或 llama.cpp server。",
+    },
 }
 
 
@@ -85,6 +122,13 @@ def config_show(args: argparse.Namespace) -> int:
     return 0
 
 
+def _print_validation_errors(profile: str, errors: list[str], action: str) -> None:
+    print(f"{action}失败：profile {profile!r} 配置未通过检查。")
+    for error in errors:
+        print(f"- {error}")
+    print(f"请先运行：mini-agent config check --profile {profile}")
+
+
 def init_config(args: argparse.Namespace) -> int:
     root = Path(args.config_dir)
     root.mkdir(parents=True, exist_ok=True)
@@ -127,8 +171,14 @@ def init_config(args: argparse.Namespace) -> int:
             print(f"- {item}")
         return 1
 
-    env_name, model_hint = PROFILE_HINTS.get(args.profile, ("", f"{args.profile}.main.model"))
+    hint = PROFILE_HINTS.get(
+        args.profile,
+        {"name": args.profile, "env": "", "model": f"{args.profile}.main.model", "note": ""},
+    )
+    env_name = hint["env"]
+    model_hint = hint["model"]
     print("\n下一步：")
+    print(f"你选择的 profile 是 {args.profile!r}（{hint['name']}）。")
     if env_name:
         print(f"1. 设置环境变量 {env_name}=你的 API Key（不要写进 YAML）。")
     else:
@@ -136,13 +186,21 @@ def init_config(args: argparse.Namespace) -> int:
     print(f"2. 编辑 {root / 'models.yaml'}，填写 {model_hint}。")
     print(f"3. 运行 mini-agent config check --profile {args.profile}")
     print(f"4. 运行 mini-agent text --profile {args.profile}")
+    if hint["note"]:
+        print(f"提示：{hint['note']}")
     return 0
 
 
 def text_mode(args: argparse.Namespace) -> int:
+    configure_logging(args.debug)
     try:
         config = load_profile_config(args.config_dir, args.profile)
-        agent = build_agent_from_profile(config)
+        errors = validate_profile_config(config)
+        if errors:
+            _print_validation_errors(args.profile, errors, "启动文本模式")
+            return 1
+        sink = NullStatusSink() if args.no_status else ConsoleStatusSink()
+        agent = build_agent_from_profile(config, status_sink=sink)
     except Exception as exc:
         print(f"启动文本模式失败：{exc}")
         return 2
@@ -151,9 +209,15 @@ def text_mode(args: argparse.Namespace) -> int:
 
 
 def voice_mode(args: argparse.Namespace) -> int:
+    configure_logging(args.debug)
     try:
         config = load_profile_config(args.config_dir, args.profile)
-        agent = build_agent_from_profile(config)
+        errors = validate_profile_config(config)
+        if errors:
+            _print_validation_errors(args.profile, errors, "启动语音模式")
+            return 1
+        sink = NullStatusSink() if args.no_status else ConsoleStatusSink()
+        agent = build_agent_from_profile(config, status_sink=sink)
     except Exception as exc:
         print(f"启动语音模式失败：{exc}")
         return 2
@@ -232,11 +296,15 @@ def build_parser() -> argparse.ArgumentParser:
     text = sub.add_parser("text", help="启动文本交互模式")
     text.add_argument("--profile", default="local", help="使用的 profile")
     text.add_argument("--config-dir", default=str(Path("config")), help="配置目录")
+    text.add_argument("--no-status", action="store_true", help="关闭简洁状态显示")
+    text.add_argument("--debug", action="store_true", help="开启详细调试日志")
     text.set_defaults(func=text_mode)
 
     voice = sub.add_parser("voice", help="启动 dummy 语音模式")
     voice.add_argument("--profile", default="local", help="使用的 profile")
     voice.add_argument("--config-dir", default=str(Path("config")), help="配置目录")
+    voice.add_argument("--no-status", action="store_true", help="关闭简洁状态显示")
+    voice.add_argument("--debug", action="store_true", help="开启详细调试日志")
     voice.set_defaults(func=voice_mode)
 
     tools = sub.add_parser("tools", help="查看内置工具")
