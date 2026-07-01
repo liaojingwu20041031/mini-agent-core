@@ -1,3 +1,5 @@
+import pytest
+
 from mini_agent.adapters.providers import get_provider_preset
 
 
@@ -21,3 +23,8 @@ def test_provider_presets_have_examples_not_defaults():
     assert "qwen-plus" in qwen.example_models
     assert kimi.base_url == "https://api.moonshot.cn/v1"
     assert "kimi-k2.6" in kimi.example_models
+
+
+def test_provider_name_is_required():
+    with pytest.raises(ValueError, match="LLM provider is required"):
+        get_provider_preset(None)

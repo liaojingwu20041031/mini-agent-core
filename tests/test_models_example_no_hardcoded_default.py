@@ -20,3 +20,10 @@ def test_committed_models_main_models_are_empty():
         if main:
             assert main.get("model", "") == "", profile
 
+
+def test_quickstart_example_does_not_choose_remote_provider():
+    data = yaml.safe_load(Path("config/quickstart.yaml.example").read_text(encoding="utf-8"))
+
+    assert data["model"]["provider"] == ""
+    assert data["model"]["model"] == ""
+    assert data["model"]["api_key_env"] == ""

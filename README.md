@@ -51,45 +51,57 @@
 安装：
 
 ```bash
+cd mini-agent-core
 python -m venv .venv
 .\.venv\Scripts\activate
 python -m pip install -e ".[dev]"
 ```
 
-初始化配置：
+初始化配置。先选择你要用的 profile，不默认绑定任何一家模型厂商：
 
-```bash
-mini-agent init --profile qwen
-```
+| 场景 | profile | API Key 环境变量 | 模型名示例 |
+| --- | --- | --- | --- |
+| 本地 Ollama / LM Studio / llama.cpp | `local` | 通常不需要 | `qwen2.5:7b` |
+| 阿里云百炼 / DashScope | `qwen` | `DASHSCOPE_API_KEY` | `qwen-plus` |
+| DeepSeek | `deepseek` | `DEEPSEEK_API_KEY` | `deepseek-chat` |
+| Moonshot Kimi | `kimi` | `MOONSHOT_API_KEY` | `kimi-k2.6` |
+| 智谱 GLM | `glm` | `ZHIPUAI_API_KEY` | `glm-4.5` |
+| 硅基流动 | `siliconflow` | `SILICONFLOW_API_KEY` | `deepseek-ai/DeepSeek-V3.1` |
 
-填写模型名和 API Key：
+下面以 DeepSeek 演示一次完整流程；你也可以把 `deepseek` 换成 `qwen`、`kimi`、`glm`、`siliconflow` 或 `local`：
 
 ```powershell
-$env:DASHSCOPE_API_KEY="你的 API Key"
+mini-agent init --profile deepseek
+$env:DEEPSEEK_API_KEY="你的 API Key"
 ```
 
-编辑 `config/models.yaml`，把 `qwen.main.model` 改成你要用的模型，例如：
+编辑 `config/models.yaml`，把对应 profile 的 `main.model` 改成你自己选择的模型，例如：
 
 ```yaml
-model: "qwen-plus"
+profiles:
+  deepseek:
+    roles:
+      main:
+        provider: deepseek
+        model: "deepseek-chat"
 ```
 
 检查配置：
 
 ```bash
-mini-agent config check --profile qwen
+mini-agent config check --profile deepseek
 ```
 
 启动文本模式：
 
 ```bash
-mini-agent text --profile qwen
+mini-agent text --profile deepseek
 ```
 
 启动 dummy 语音模式：
 
 ```bash
-mini-agent voice --profile qwen
+mini-agent voice --profile deepseek
 ```
 
 更详细的新手教程见 [docs/quickstart.md](docs/quickstart.md)。

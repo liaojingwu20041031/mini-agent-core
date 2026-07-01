@@ -22,6 +22,25 @@ python -m pip install -e ".[dev]"
 mini-agent --help
 ```
 
+## 选择模型 profile
+
+`mini-agent-core` 不默认绑定任何一家模型厂商。你先选择 profile，再填写对应的模型名和环境变量：
+
+| 场景 | profile | API Key 环境变量 | 模型名示例 |
+| --- | --- | --- | --- |
+| 本地 Ollama / LM Studio / llama.cpp | `local` | 通常不需要 | `qwen2.5:7b` |
+| 阿里云百炼 / DashScope | `qwen` | `DASHSCOPE_API_KEY` | `qwen-plus` |
+| DeepSeek | `deepseek` | `DEEPSEEK_API_KEY` | `deepseek-chat` |
+| Moonshot Kimi | `kimi` | `MOONSHOT_API_KEY` | `kimi-k2.6` |
+| 智谱 GLM | `glm` | `ZHIPUAI_API_KEY` | `glm-4.5` |
+| 硅基流动 | `siliconflow` | `SILICONFLOW_API_KEY` | `deepseek-ai/DeepSeek-V3.1` |
+
+初始化命令里的 `--profile` 可以换成上表任意一个，下面只用 DeepSeek 做命令示例：
+
+```bash
+mini-agent init --profile deepseek
+```
+
 ## 使用本地 Ollama / LM Studio / llama.cpp server
 
 先启动你的本地 OpenAI-compatible 服务，例如 Ollama：
@@ -157,14 +176,16 @@ print(registry.list()[0].name)
 解决：填写模型名，例如：
 
 ```yaml
-model: "qwen-plus"
+model: "deepseek-chat"
 ```
 
-`environment variable DASHSCOPE_API_KEY is not set`：
+`environment variable XXX_API_KEY is not set`：
 
 ```powershell
-$env:DASHSCOPE_API_KEY="你的 API Key"
+$env:DEEPSEEK_API_KEY="你的 API Key"
 ```
+
+把 `DEEPSEEK_API_KEY` 替换为你当前 profile 对应的环境变量，例如 `DASHSCOPE_API_KEY`、`MOONSHOT_API_KEY`、`ZHIPUAI_API_KEY` 或 `SILICONFLOW_API_KEY`。
 
 `Unknown profile`：
 

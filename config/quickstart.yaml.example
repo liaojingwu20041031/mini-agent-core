@@ -2,12 +2,12 @@
 # 用途：帮助新手理解最小配置项；当前运行时仍使用 config/providers.yaml、models.yaml、agent.yaml、voice.yaml、tools.yaml、mcp.yaml。
 # 不配置 MCP，不启用危险工具，不写真实 API Key。
 
-profile: qwen                 # 你准备使用的 profile，例如 local、qwen、deepseek。
+profile: local                # 你准备使用的 profile，例如 local、qwen、deepseek、kimi、glm、siliconflow。
 
 model:
-  provider: qwen              # 必填：provider 名，例如 qwen、deepseek、local。
-  model: ""                   # 必填：模型名由你自己填写，例如 qwen-plus。
-  api_key_env: DASHSCOPE_API_KEY  # 只能写环境变量名，不能写真实 Key。
+  provider: ""                # 必填：provider 名，例如 local、qwen、deepseek、kimi、glm、siliconflow、custom。
+  model: ""                   # 必填：模型名由你自己填写，例如 qwen-plus、deepseek-chat、glm-4.5。
+  api_key_env: ""             # 只能写环境变量名，不能写真实 Key；本地模型可留空。
   base_url: ""                # 可选：一般留空，使用 provider preset；自定义服务才填写。
   timeout: 30                 # 请求超时时间，单位秒。
   temperature: 0.2            # 采样温度。
@@ -24,4 +24,3 @@ tools:
 voice:
   stt_adapter: dummy          # dummy：用文字模拟语音输入。
   tts_adapter: dummy          # dummy：用文字模拟语音输出。
-

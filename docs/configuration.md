@@ -185,9 +185,11 @@ filesystem 必须配置 `sandbox`；shell/docker/playwright 必须保持 `risk_l
 ## 推荐上手顺序
 
 ```bash
-mini-agent init --profile qwen
-mini-agent config show --profile qwen
-mini-agent config check --profile qwen
-mini-agent text --profile qwen
+mini-agent init --profile local
+# 先编辑 config/models.yaml，填写 local.main.model
+mini-agent config show --profile local
+mini-agent config check --profile local
+mini-agent text --profile local
 ```
 
+如果使用远程国内模型，把 `local` 换成 `qwen`、`deepseek`、`kimi`、`glm` 或 `siliconflow`，并设置对应 API Key 环境变量。

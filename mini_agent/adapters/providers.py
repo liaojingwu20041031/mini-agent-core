@@ -111,7 +111,11 @@ _register(
 def get_provider_preset(name: str | None, region: str | None = None) -> ProviderPreset:
     """Return a provider preset by name or alias."""
 
-    key = (name or "deepseek").strip().lower()
+    if not name:
+        supported = ", ".join(sorted({item.name for item in _PROVIDERS.values()}))
+        raise ValueError(f"LLM provider is required. Supported providers: {supported}")
+
+    key = name.strip().lower()
     preset = _PROVIDERS.get(key)
     if not preset:
         supported = ", ".join(sorted({item.name for item in _PROVIDERS.values()}))
