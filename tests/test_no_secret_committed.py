@@ -10,7 +10,13 @@ SECRET_PATTERNS = [
 
 
 def test_no_secret_or_local_init_file_tracked():
-    tracked = subprocess.run(["git", "ls-files"], check=True, capture_output=True, text=True).stdout.splitlines()
+    tracked = subprocess.run(
+        ["git", "ls-files"],
+        check=True,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    ).stdout.splitlines()
 
     assert ".env" not in tracked
     assert "config/quickstart.yaml" not in tracked
