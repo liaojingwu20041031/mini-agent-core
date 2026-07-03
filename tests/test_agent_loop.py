@@ -1,3 +1,5 @@
+import json
+
 from mini_agent.core.agent import Agent
 from mini_agent.core.llm import LLMResponse
 from mini_agent.core.messages import ToolCall
@@ -40,6 +42,7 @@ def test_agent_stops_at_max_steps():
         [
             LLMResponse(tool_calls=[ToolCall(id="1", name="double", arguments={"value": 1})]),
             LLMResponse(tool_calls=[ToolCall(id="2", name="double", arguments={"value": 2})]),
+            LLMResponse(content="Summary from completed tools."),
         ]
     )
     registry = ToolRegistry()
@@ -47,5 +50,14 @@ def test_agent_stops_at_max_steps():
     agent = Agent(llm=llm, tools=registry, max_steps=1)
 
     result = agent.run("loop")
-    assert "max_steps" in result
+    assert result == "Summary from completed tools."
 
+
+def test_tool_result_truncation_keeps_valid_json():
+    agent = Agent(llm=SequenceLLM([]), tool_result_max_chars=10)
+
+    content = agent._truncate_tool_result(json.dumps({"name": "demo", "content": "x" * 100, "is_error": False, "error": None}))
+    payload = json.loads(content)
+
+    assert payload["truncated"] is True
+    assert payload["name"] == "demo"

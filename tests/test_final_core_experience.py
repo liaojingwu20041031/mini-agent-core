@@ -98,7 +98,9 @@ def test_models_list_and_use_roundtrip(tmp_path, monkeypatch, capsys):
     assert "model config path" in output
 
     assert cli.main(["models", "use", "--config-dir", str(tmp_path), "--profile", "local", "--model", "server-model-b"]) == 0
-    data = yaml.safe_load((tmp_path / "models.yaml").read_text(encoding="utf-8"))
+    tracked_data = yaml.safe_load((tmp_path / "models.yaml").read_text(encoding="utf-8"))
+    data = yaml.safe_load((tmp_path / "models.local.yaml").read_text(encoding="utf-8"))
+    assert tracked_data["profiles"]["local"]["roles"]["main"]["model"] == ""
     assert data["profiles"]["local"]["roles"]["main"]["model"] == "server-model-b"
 
 

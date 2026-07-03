@@ -8,6 +8,7 @@ from typing import Any
 import httpx
 
 from mini_agent.core.tools import tool
+from mini_agent.skills.builtin.url_security import validate_public_url
 
 
 @tool(description="Write text to a named in-memory memory slot.", risk_level="confirm")
@@ -47,7 +48,16 @@ def file_append_sandbox(sandbox_dir: str, relative_path: str, content: str) -> d
 
 @tool(description="POST JSON to an HTTP endpoint after explicit confirmation.", risk_level="confirm", timeout=15)
 def http_post_json_confirm(url: str, payload: dict[str, Any]) -> dict[str, Any]:
-    response = httpx.post(url, json=payload, timeout=10)
+    clean_url, blocked = validate_public_url(url)
+    if blocked:
+        return {
+            "ok": False,
+            "url": url,
+            "status_code": None,
+            "text": "",
+            "error": {"code": blocked, "message": f"URL 不允许访问：{blocked}"},
+        }
+    response = httpx.post(clean_url, json=payload, timeout=10)
     return {"status_code": response.status_code, "text": response.text[:1000]}
 
 

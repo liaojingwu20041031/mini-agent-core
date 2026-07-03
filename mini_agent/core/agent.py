@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 import time
 
 from mini_agent.core.errors import AgentError
@@ -72,9 +73,9 @@ class Agent:
                 return final
 
             if step >= self.max_steps:
-                final = "Agent stopped because max_steps was reached before a final answer."
+                final = self._summarize_after_max_steps()
                 self.session.add(Message(role="assistant", content=final))
-                self._emit("agent", "agent", "end", detail="max_steps reached", ok=False)
+                self._emit("agent", "agent", "end", detail="max_steps reached", ok=not final.startswith("Agent stopped"))
                 return final
 
             self.session.add(
@@ -116,7 +117,37 @@ class Agent:
     def _truncate_tool_result(self, content: str) -> str:
         if self.tool_result_max_chars <= 0 or len(content) <= self.tool_result_max_chars:
             return content
-        return content[: self.tool_result_max_chars] + "...[truncated]"
+        truncated_content = content[: self.tool_result_max_chars] + "...[truncated]"
+        try:
+            payload = json.loads(content)
+            payload["content"] = truncated_content
+            payload["truncated"] = True
+        except json.JSONDecodeError:
+            payload = {
+                "name": "tool_result",
+                "content": truncated_content,
+                "is_error": False,
+                "error": None,
+                "truncated": True,
+            }
+        return json.dumps(payload, ensure_ascii=False, default=str)
+
+    def _summarize_after_max_steps(self) -> str:
+        prompt = (
+            "The tool step limit has been reached. Do not request more tools. "
+            "Give the best final answer using the conversation and completed tool results."
+        )
+        try:
+            response = self.llm.chat(
+                [*self.session.to_llm_messages(), Message(role="user", content=prompt)],
+                tools=None,
+                timeout=self.llm_timeout,
+            )
+        except Exception:
+            return "Agent stopped because max_steps was reached before a final answer."
+        if response.tool_calls:
+            return "Agent stopped because max_steps was reached before a final answer."
+        return response.content or "Agent stopped because max_steps was reached before a final answer."
 
     def _emit(
         self,

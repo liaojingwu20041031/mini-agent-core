@@ -44,24 +44,24 @@
 
 ## 适合场景
 
-| 场景 | 适合怎么用 |
-| --- | --- |
-| 快速验证 Agent 方案 | 用 CLI 跑通模型配置、Agent loop、工具调用和状态事件 |
-| 接入国内模型服务 | 通过 OpenAI-compatible 接口对接通义千问、DeepSeek、Kimi、GLM、硅基流动等服务 |
-| 嵌入现有项目 | 把 `mini_agent` 作为轻量 SDK，引入 CLI、APP、Web 后台或自动化任务 |
-| 扩展业务工具 | 使用 ToolPack、Capability 和 external extension 注入项目工具 |
-| 机器人 / ARM 项目 | Agent 负责任务级协调，真实 ROS2 / 设备控制放在业务项目里实现 |
+| 场景                | 适合怎么用                                                                   |
+| ------------------- | ---------------------------------------------------------------------------- |
+| 快速验证 Agent 方案 | 用 CLI 跑通模型配置、Agent loop、工具调用和状态事件                          |
+| 接入国内模型服务    | 通过 OpenAI-compatible 接口对接通义千问、DeepSeek、Kimi、GLM、硅基流动等服务 |
+| 嵌入现有项目        | 把`mini_agent` 作为轻量 SDK，引入 CLI、APP、Web 后台或自动化任务           |
+| 扩展业务工具        | 使用 ToolPack、Capability 和 external extension 注入项目工具                 |
+| 机器人 / ARM 项目   | Agent 负责任务级协调，真实 ROS2 / 设备控制放在业务项目里实现                 |
 
 ## 核心能力
 
-| 能力 | 说明 |
-| --- | --- |
-| 模型配置闭环 | `models list/use/check/doctor` 覆盖查询、选择、写入和诊断 |
-| 一次配置启动 | `use` 一次后可直接 `start`、`chat` 或 `speak` |
-| Agent 可配置 | `config/agents.yaml` 描述身份、能力、边界和风格 |
-| 工具可扩展 | 支持 `ToolDefinition` metadata、`tools describe`、ToolPack、Capability |
-| 默认安全 | safe / confirm / danger 分级，danger 工具默认不注册 |
-| 便于嵌入 | ROS2、APP、Web、ARM 项目可通过外部 ToolPack 注入能力 |
+| 能力         | 说明                                                                      |
+| ------------ | ------------------------------------------------------------------------- |
+| 模型配置闭环 | `models list/use/check/doctor` 覆盖查询、选择、写入和诊断               |
+| 一次配置启动 | `use` 一次后可直接 `start`、`chat` 或 `speak`                     |
+| Agent 可配置 | `config/agents.yaml` 描述身份、能力、边界和风格                         |
+| 工具可扩展   | 支持`ToolDefinition` metadata、`tools describe`、ToolPack、Capability |
+| 默认安全     | safe / confirm / danger 分级，danger 工具默认不注册                       |
+| 便于嵌入     | ROS2、APP、Web、ARM 项目可通过外部 ToolPack 注入能力                      |
 
 ## 项目结构
 
@@ -77,11 +77,26 @@ mini-agent-core/
 
 ## 快速开始
 
+先进入项目根目录，并安装为可编辑包。安装后 PowerShell 才会认识 `mini-agent` 这个命令。
+
 ```powershell
 cd mini-agent-core
 python -m venv .venv
 .\.venv\Scripts\activate
 python -m pip install -e ".[dev]"
+```
+
+如果你暂时不想安装，或看到 `mini-agent: The term 'mini-agent' is not recognized`，可以把后文所有 `mini-agent ...` 临时替换成：
+
+```powershell
+python -m mini_agent.cli ...
+```
+
+例如：
+
+```powershell
+python -m mini_agent.cli use --profile <profile> --agent default
+python -m mini_agent.cli start
 ```
 
 选择一个 `<profile>`。远程服务需要先设置 API Key 环境变量；本地 profile 不需要 Key，但要先启动 Ollama、LM Studio、llama.cpp server、vLLM 等 OpenAI-compatible 服务。
@@ -104,14 +119,14 @@ mini-agent start
 
 常用 profile：
 
-| profile | 用途 | API Key 环境变量 |
-| --- | --- | --- |
-| `local` | 本地 OpenAI-compatible 服务 | 通常为空 |
-| `qwen` | 阿里云百炼 / DashScope | `DASHSCOPE_API_KEY` |
-| `deepseek` | DeepSeek | `DEEPSEEK_API_KEY` |
-| `kimi` | Moonshot Kimi | `MOONSHOT_API_KEY` |
-| `glm` | 智谱 GLM | `ZHIPUAI_API_KEY` |
-| `siliconflow` | 硅基流动 | `SILICONFLOW_API_KEY` |
+| profile         | 用途                        | API Key 环境变量        |
+| --------------- | --------------------------- | ----------------------- |
+| `local`       | 本地 OpenAI-compatible 服务 | 通常为空                |
+| `qwen`        | 阿里云百炼 / DashScope      | `DASHSCOPE_API_KEY`   |
+| `deepseek`    | DeepSeek                    | `DEEPSEEK_API_KEY`    |
+| `kimi`        | Moonshot Kimi               | `MOONSHOT_API_KEY`    |
+| `glm`         | 智谱 GLM                    | `ZHIPUAI_API_KEY`     |
+| `siliconflow` | 硅基流动                    | `SILICONFLOW_API_KEY` |
 
 也可以使用向导模式：
 
@@ -131,7 +146,7 @@ mini-agent models use --profile <profile> --model "<模型ID>"
 
 1. `mini-agent init --profile <profile>` 初始化配置。
 2. `mini-agent models list --profile <profile>` 查看服务端实际可用模型。
-3. `mini-agent models use --profile <profile> --model "<模型ID>"` 写入明确选择的模型。
+3. `mini-agent models use --profile <profile> --model "<模型ID>"` 写入本地忽略文件 `config/models.local.yaml`。
 4. `mini-agent config check --profile <profile>` 检查 profile、模型和环境变量。
 5. `mini-agent use --profile <profile> --agent default` 固定默认 profile 与 Agent。
 6. `mini-agent start` 或 `mini-agent chat` 进入文本交互。
@@ -139,12 +154,33 @@ mini-agent models use --profile <profile> --model "<模型ID>"
 
 ## 一次配置，后续启动
 
+推荐先安装可编辑包：
+
+```powershell
+python -m pip install -e .
+```
+
+然后设置默认 profile 和 Agent：
+
 ```powershell
 mini-agent use --profile <profile> --agent default
 mini-agent status
+```
+
+后续每天启动只需要：
+
+```powershell
 mini-agent start   # 文本交互
 mini-agent chat    # 文本交互
 mini-agent speak   # dummy 语音交互
+```
+
+如果 `mini-agent` 仍然不被 PowerShell 识别，说明当前 Python 的 `Scripts` 目录没有进 PATH。此时不用卡住，直接用免安装启动法：
+
+```powershell
+python -m mini_agent.cli use --profile <profile> --agent default
+python -m mini_agent.cli status
+python -m mini_agent.cli start
 ```
 
 `.mini-agent/state.json` 只保存 `default_profile`、`default_agent`、`default_mode`、`config_dir`，不保存模型名、base_url、API Key 或示例模型。
@@ -203,11 +239,11 @@ extensions:
 
 ### 工具安全分级
 
-| 分级 | 适合能力 | 默认策略 |
-| --- | --- | --- |
-| `safe` | 计算、只读查询、公开网页读取等低风险能力 | 可直接注册 |
-| `confirm` | 需要用户确认的操作，例如发送请求、触发外部动作 | 注册前后保留确认链路 |
-| `danger` | Shell、文件破坏性操作、生产环境写入等高风险能力 | 默认不注册 |
+| 分级        | 适合能力                                        | 默认策略             |
+| ----------- | ----------------------------------------------- | -------------------- |
+| `safe`    | 计算、只读查询、公开网页读取等低风险能力        | 可直接注册           |
+| `confirm` | 需要用户确认的操作，例如发送请求、触发外部动作  | 注册前后保留确认链路 |
+| `danger`  | Shell、文件破坏性操作、生产环境写入等高风险能力 | 默认不注册           |
 
 这套分级不是为了限制扩展，而是为了让 Agent 在进入真实业务系统前有清晰、可审计的安全边界。
 
@@ -224,14 +260,15 @@ extensions:
 
 ## 配置文件
 
-| 文件 | 作用 |
-| --- | --- |
-| `config/providers.yaml` | provider、base_url、API Key 环境变量等配置 |
-| `config/models.yaml` | 当前 profile 选择的模型 ID |
-| `config/agents.yaml` | 多 Agent 身份、能力、边界和风格 |
-| `config/tools.yaml` | ToolPack、工具启用列表和外部扩展 |
-| `config/voice.yaml` | dummy / OpenAI / 本地语音相关配置 |
-| `config/mcp.yaml` | MCP server 配置，默认不强制启用 |
+| 文件                         | 作用                                                         |
+| ---------------------------- | ------------------------------------------------------------ |
+| `config/providers.yaml`    | provider、base_url、API Key 环境变量等配置                   |
+| `config/models.yaml`       | 可提交的模型 role 模板和默认值                               |
+| `config/models.local.yaml` | 用户本地模型选择覆盖，默认被`.gitignore` 忽略              |
+| `config/agents.yaml`       | 多 Agent 身份、能力、边界和风格                              |
+| `config/tools.yaml`        | ToolPack、工具启用列表和外部扩展                             |
+| `config/voice.yaml`        | dummy / OpenAI / 本地语音相关配置                            |
+| `config/mcp.yaml`          | MCP server 配置，默认不强制启用；V0.1 不注册可调用 MCP tools |
 
 真实 API Key 应放在环境变量中，不要写入仓库。
 

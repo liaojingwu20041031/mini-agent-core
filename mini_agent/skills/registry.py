@@ -55,10 +55,12 @@ def build_tool_registry(enabled: Iterable[str] | ToolsConfig | None = None) -> T
     registry = ToolRegistry()
     toolpacks_enabled: tuple[str, ...] = ()
     extensions: tuple[dict[str, Any], ...] = ()
+    use_default_when_empty = enabled is None
     if isinstance(enabled, ToolsConfig):
-        names = tuple(enabled.enabled or ())
+        names = tuple(DEFAULT_SAFE_SKILLS if enabled.enabled is None else enabled.enabled)
         toolpacks_enabled = tuple(enabled.toolpacks_enabled or ())
         extensions = tuple(enabled.extensions or ())
+        use_default_when_empty = enabled.enabled is None
     else:
         names = tuple(enabled or DEFAULT_SAFE_SKILLS)
     packs = builtin_toolpacks()
@@ -75,7 +77,7 @@ def build_tool_registry(enabled: Iterable[str] | ToolsConfig | None = None) -> T
         if name not in ALL_SKILLS:
             raise KeyError(f"Unknown built-in skill: {name}")
         registry.register(ALL_SKILLS[name])
-    if not toolpacks_enabled and not names:
+    if use_default_when_empty and not toolpacks_enabled and not names:
         for name in DEFAULT_SAFE_SKILLS:
             registry.register(ALL_SKILLS[name])
     return registry

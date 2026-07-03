@@ -3,17 +3,17 @@
 from __future__ import annotations
 
 import html
-import ipaddress
 import re
-import socket
 import time
 from html.parser import HTMLParser
 from typing import Any
-from urllib.parse import parse_qs, unquote, urljoin, urlparse, urlsplit
+from urllib.parse import parse_qs, unquote, urljoin, urlparse
 
 import httpx
 
 from mini_agent.core.tools import tool
+from mini_agent.skills.builtin.url_security import blocked_host as _blocked_host
+from mini_agent.skills.builtin.url_security import validate_public_url as _validate_public_url
 
 USER_AGENT = "mini-agent-core/0.1 (+https://github.com/liaojingwu20041031/mini-agent-core)"
 MAX_SEARCH_RESULTS = 10
@@ -163,40 +163,6 @@ def web_search(query: str, max_results: int = 5, region: str = "wt-wt") -> dict[
         "error": None,
         "note": "免费页面解析，稳定性不如商业搜索 API；请以结果来源页面为准。",
     }
-
-
-def _blocked_host(hostname: str) -> str | None:
-    if not hostname:
-        return "missing_host"
-    lowered = hostname.strip("[]").lower()
-    if lowered in {"localhost", "0.0.0.0"}:
-        return "blocked_private_url"
-    try:
-        addresses = socket.getaddrinfo(lowered, None)
-    except socket.gaierror:
-        return "dns_error"
-    for item in addresses:
-        ip = ipaddress.ip_address(item[4][0])
-        if (
-            ip.is_private
-            or ip.is_loopback
-            or ip.is_link_local
-            or ip.is_unspecified
-            or ip.is_multicast
-            or ip.is_reserved
-        ):
-            return "blocked_private_url"
-    return None
-
-
-def _validate_public_url(url: str) -> tuple[str | None, str | None]:
-    parsed = urlsplit(url)
-    if parsed.scheme not in {"http", "https"}:
-        return None, "unsupported_scheme"
-    reason = _blocked_host(parsed.hostname or "")
-    if reason:
-        return None, reason
-    return parsed.geturl(), None
 
 
 @tool(description="Fetch public URL text safely. Blocks private network addresses and binary content.", timeout=15)

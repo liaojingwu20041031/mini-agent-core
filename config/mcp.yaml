@@ -1,5 +1,6 @@
 # MCP 配置。
 # 默认关闭所有 MCP server，避免新手意外联网、读写文件或执行命令。
+# V0.1 只做 MCP 配置/list/process 占位，不向 LLM 注册可调用 MCP tools/call。
 profiles:
   local:
     servers: {}

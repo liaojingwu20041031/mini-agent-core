@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from typing import Any
 
 from mini_agent.adapters.providers import get_provider_preset
@@ -22,6 +23,8 @@ class OpenAICompatibleClient:
         temperature: float = 0.2,
         provider: str = "custom",
         extra_body: dict[str, Any] | None = None,
+        tool_choice: str | dict[str, Any] = "auto",
+        max_retries: int = 2,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
@@ -30,6 +33,9 @@ class OpenAICompatibleClient:
         self.temperature = temperature
         self.provider = provider
         self.extra_body = extra_body or {}
+        self.tool_choice = tool_choice
+        self.max_retries = max(0, max_retries)
+        self._client: Any = None
 
     @classmethod
     def from_provider(
@@ -42,6 +48,8 @@ class OpenAICompatibleClient:
         timeout: float = 30,
         temperature: float = 0.2,
         extra_body: dict[str, Any] | None = None,
+        tool_choice: str | dict[str, Any] = "auto",
+        max_retries: int = 2,
     ) -> "OpenAICompatibleClient":
         preset = get_provider_preset(provider, region)
         if not model:
@@ -54,6 +62,8 @@ class OpenAICompatibleClient:
             temperature=temperature,
             provider=preset.name,
             extra_body=extra_body,
+            tool_choice=tool_choice,
+            max_retries=max_retries,
         )
 
     def chat(
@@ -75,7 +85,7 @@ class OpenAICompatibleClient:
         payload.update(self.extra_body)
         if tools:
             payload["tools"] = tools
-            payload["tool_choice"] = "auto"
+            payload["tool_choice"] = self.tool_choice
 
         headers = {"Content-Type": "application/json"}
         if self.api_key:
@@ -83,13 +93,7 @@ class OpenAICompatibleClient:
 
         url = f"{self.base_url}/chat/completions"
         try:
-            response = httpx.post(
-                url,
-                headers=headers,
-                json=payload,
-                timeout=timeout or self.timeout,
-            )
-            response.raise_for_status()
+            response = self._post_with_retries(httpx, url, headers, payload, timeout or self.timeout)
         except httpx.HTTPStatusError as exc:
             body = exc.response.text[:500]
             raise AgentError(
@@ -103,3 +107,39 @@ class OpenAICompatibleClient:
         message = raw["choices"][0]["message"]
         tool_calls = [ToolCall.from_openai(call) for call in message.get("tool_calls") or []]
         return LLMResponse(content=message.get("content") or "", tool_calls=tool_calls, raw=raw)
+
+    def close(self) -> None:
+        if self._client is not None:
+            self._client.close()
+            self._client = None
+
+    def __enter__(self) -> "OpenAICompatibleClient":
+        return self
+
+    def __exit__(self, exc_type: Any, exc: Any, traceback: Any) -> None:
+        self.close()
+
+    def _http_client(self, httpx_module: Any) -> Any:
+        if self._client is None:
+            self._client = httpx_module.Client()
+        return self._client
+
+    def _post_with_retries(self, httpx_module: Any, url: str, headers: dict[str, str], payload: dict[str, Any], timeout: float) -> Any:
+        last_error: Exception | None = None
+        for attempt in range(self.max_retries + 1):
+            try:
+                response = self._http_client(httpx_module).post(url, headers=headers, json=payload, timeout=timeout)
+                response.raise_for_status()
+                return response
+            except httpx_module.HTTPStatusError as exc:
+                last_error = exc
+                if exc.response.status_code not in {429, 500, 502, 503, 504} or attempt >= self.max_retries:
+                    raise
+            except httpx_module.HTTPError as exc:
+                last_error = exc
+                if attempt >= self.max_retries:
+                    raise
+            time.sleep(min(0.1 * (2**attempt), 1.0))
+        if last_error:
+            raise last_error
+        raise RuntimeError("LLM request failed without a response")

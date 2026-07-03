@@ -106,7 +106,7 @@ def _redacted(config, show_model: bool = False, show_examples: bool = False) -> 
 
 
 def _model_config_path(profile: str, role: str = "main") -> str:
-    return f"config/models.yaml -> profiles.{profile}.roles.{role}.model"
+    return f"config/models.local.yaml -> profiles.{profile}.roles.{role}.model"
 
 
 def _main_model_context(config_dir: str | Path, profile: str) -> tuple[Any, Any, Any, str, str]:
@@ -154,10 +154,13 @@ def _fetch_remote_model_ids(base_url: str, api_key: str, timeout: float = 15) ->
 
 
 def _write_model_id(config_dir: str | Path, profile: str, model_id: str) -> None:
-    path = Path(config_dir) / "models.yaml"
-    if not path.exists():
-        raise FileNotFoundError(f"缺少配置文件：{path}。请先运行 mini-agent init --profile {profile}")
-    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    root = Path(config_dir)
+    base_path = root / "models.yaml"
+    if not base_path.exists():
+        raise FileNotFoundError(f"缺少配置文件：{base_path}。请先运行 mini-agent init --profile {profile}")
+    path = root / "models.local.yaml"
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) if path.exists() else {}
+    data = data or {}
     profiles = data.setdefault("profiles", {})
     profile_data = profiles.setdefault(profile, {})
     roles = profile_data.setdefault("roles", {})
@@ -438,7 +441,7 @@ def init_config(args: argparse.Namespace) -> int:
     else:
         print("1. 确认本地 OpenAI-compatible 服务已启动。")
     print(f"2. 可运行 mini-agent models list --profile {args.profile} 查询服务端模型 ID。")
-    print(f"3. 编辑 {root / 'models.yaml'}，填写 {_model_config_path(args.profile)}，或运行 models use 写入。")
+    print(f"3. 编辑 {root / 'models.local.yaml'}，填写 {_model_config_path(args.profile)}，或运行 models use 写入。")
     print(f"4. 运行 mini-agent config check --profile {args.profile}")
     print(f"5. 运行 mini-agent use --profile {args.profile} --agent default")
     print("6. 运行 mini-agent start")

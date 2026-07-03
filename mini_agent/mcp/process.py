@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 from dataclasses import dataclass
 
@@ -26,9 +27,14 @@ class MCPProcess:
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
-            env={**self.config.env},
+            env={**os.environ, **self.config.env},
         )
 
-    def stop(self) -> None:
+    def stop(self, timeout: float = 5) -> None:
         if self.process and self.process.poll() is None:
             self.process.terminate()
+            try:
+                self.process.wait(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                self.process.kill()
+                self.process.wait(timeout=timeout)

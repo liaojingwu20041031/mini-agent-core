@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=7.0"]
+dev = ["pytest>=7.0", "ruff>=0.5"]
 voice = ["sounddevice>=0.4", "webrtcvad>=2.0"]
 
 [project.scripts]
@@ -22,4 +22,11 @@ mini-agent = "mini_agent.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["mini_agent*"]
+
+[tool.ruff]
+line-length = 140
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
 

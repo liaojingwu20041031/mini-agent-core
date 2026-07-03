@@ -19,7 +19,7 @@ def test_fetch_url_blocks_private_ips(monkeypatch):
 
 
 def test_fetch_url_blocks_domain_resolving_to_private_ip(monkeypatch):
-    monkeypatch.setattr("mini_agent.skills.builtin.web.socket.getaddrinfo", lambda *args, **kwargs: [(None, None, None, None, ("10.0.0.1", 0))])
+    monkeypatch.setattr("mini_agent.skills.builtin.url_security.socket.getaddrinfo", lambda *args, **kwargs: [(None, None, None, None, ("10.0.0.1", 0))])
 
     result = fetch_url_text("https://example.com")
 

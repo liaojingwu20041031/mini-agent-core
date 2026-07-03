@@ -2,6 +2,7 @@
 # 复制为 config/mcp.yaml 后使用。
 # 默认关闭原因：MCP server 可能联网、读写文件或执行命令。新手应先跑通 Agent Core，再按需开启。
 # 风险：enabled: true 前请确认 command 来源可信。
+# V0.1 只做 MCP 配置/list/process 占位，不向 LLM 注册可调用 MCP tools/call。
 profiles:
   # 常规模型 profile 默认不启用 MCP，保持轻量。
   local:

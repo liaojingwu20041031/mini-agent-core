@@ -31,6 +31,8 @@ class MCPManager:
                     errors.append(f"filesystem MCP sandbox does not exist: {server.sandbox}")
             if server.enabled and server.transport == "stdio" and not server.command:
                 errors.append(f"MCP server {server.name} enabled without command")
+            if server.tools:
+                errors.append(f"MCP server {server.name} declares tools, but MCP tools/call is not implemented in V0.1")
         return errors
 
     def enabled_servers(self) -> list[MCPServerConfig]:

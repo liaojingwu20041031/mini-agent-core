@@ -44,6 +44,22 @@ def test_profile_check_local_success(tmp_path):
     assert validate_profile_config(config) == []
 
 
+def test_models_local_yaml_overrides_tracked_models_yaml(tmp_path):
+    config_dir = _copy_config_with_models(
+        tmp_path,
+        "profiles:\n  local:\n    roles:\n      main:\n        provider: local\n        model: tracked-model\n",
+    )
+    (config_dir / "models.local.yaml").write_text(
+        "profiles:\n  local:\n    roles:\n      main:\n        model: local-model\n",
+        encoding="utf-8",
+    )
+
+    config = load_profile_config(config_dir, "local")
+
+    assert config.role("main").provider == "local"
+    assert config.role("main").model == "local-model"
+
+
 def test_provider_override_keeps_preset_base_url(tmp_path):
     config_dir = _copy_config_with_models(
         tmp_path,

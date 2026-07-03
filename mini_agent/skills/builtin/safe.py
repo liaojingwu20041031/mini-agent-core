@@ -14,10 +14,15 @@ from mini_agent.core.tools import tool
 
 _ALLOWED_NAMES = {name: getattr(math, name) for name in dir(math) if not name.startswith("_")}
 _ALLOWED_NAMES.update({"abs": abs, "round": round, "min": min, "max": max})
+MAX_CALCULATOR_EXPRESSION_CHARS = 500
+MAX_CALCULATOR_ABS_RESULT = 10**100
+MAX_CALCULATOR_POWER_ABS_EXPONENT = 12
 
 
 @tool(name="calculator", description="Calculate a simple Python math expression.")
 def calculator(expression: str) -> Any:
+    if len(expression) > MAX_CALCULATOR_EXPRESSION_CHARS:
+        raise ValueError("expression is too long")
     tree = ast.parse(expression, mode="eval")
     for node in ast.walk(tree):
         if isinstance(node, (ast.Call, ast.BinOp, ast.UnaryOp, ast.Expression, ast.Load, ast.Constant, ast.Name)):
@@ -25,7 +30,19 @@ def calculator(expression: str) -> Any:
         if isinstance(node, (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Pow, ast.Mod, ast.USub, ast.UAdd)):
             continue
         raise ValueError(f"Unsupported expression element: {type(node).__name__}")
-    return eval(compile(tree, "<calculator>", "eval"), {"__builtins__": {}}, _ALLOWED_NAMES)
+    _validate_calculator_tree(tree)
+    result = eval(compile(tree, "<calculator>", "eval"), {"__builtins__": {}}, _ALLOWED_NAMES)
+    if isinstance(result, (int, float)) and abs(result) > MAX_CALCULATOR_ABS_RESULT:
+        raise ValueError("result is too large")
+    return result
+
+
+def _validate_calculator_tree(tree: ast.AST) -> None:
+    for node in ast.walk(tree):
+        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Pow):
+            if isinstance(node.right, ast.Constant) and isinstance(node.right.value, (int, float)):
+                if abs(node.right.value) > MAX_CALCULATOR_POWER_ABS_EXPONENT:
+                    raise ValueError("power exponent is too large")
 
 
 @tool(description="Convert common units.")

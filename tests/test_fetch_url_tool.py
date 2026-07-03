@@ -12,7 +12,7 @@ class FakeResponse:
 
 
 def _public_dns(monkeypatch):
-    monkeypatch.setattr("mini_agent.skills.builtin.web.socket.getaddrinfo", lambda *args, **kwargs: [(None, None, None, None, ("93.184.216.34", 0))])
+    monkeypatch.setattr("mini_agent.skills.builtin.url_security.socket.getaddrinfo", lambda *args, **kwargs: [(None, None, None, None, ("93.184.216.34", 0))])
 
 
 def test_fetch_url_text_cleans_html(monkeypatch):

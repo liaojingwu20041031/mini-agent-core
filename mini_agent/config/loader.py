@@ -39,6 +39,16 @@ def _profile_section(data: dict[str, Any], profile: str) -> dict[str, Any]:
     return section or {}
 
 
+def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
+    merged = dict(base)
+    for key, value in override.items():
+        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+            merged[key] = _deep_merge(merged[key], value)
+        else:
+            merged[key] = value
+    return merged
+
+
 def _provider_configs(raw: dict[str, Any]) -> dict[str, ProviderConfig]:
     providers = {
         preset.name: ProviderConfig(
@@ -90,6 +100,9 @@ def load_profile_config(config_dir: str | Path = "config", profile: str = "local
     for name in CONFIG_FILES:
         path = root / f"{name}.yaml"
         data = _profile_section(_read_yaml(path), profile)
+        local_path = root / f"{name}.local.yaml"
+        if local_path.exists():
+            data = _deep_merge(data, _profile_section(_read_yaml(local_path), profile))
         merged[name] = data
 
     providers = _provider_configs(merged["providers"])
@@ -99,7 +112,7 @@ def load_profile_config(config_dir: str | Path = "config", profile: str = "local
     tools_raw = merged["tools"]
     toolpacks_raw = tools_raw.get("toolpacks") or {}
     tools_section_raw = tools_raw.get("tools") or {}
-    enabled_tools = tools_section_raw.get("enabled", tools_raw.get("enabled", ()))
+    enabled_tools = tools_section_raw.get("enabled", tools_raw.get("enabled", None))
     return AppProfileConfig(
         profile=profile,
         providers=providers,
@@ -111,7 +124,7 @@ def load_profile_config(config_dir: str | Path = "config", profile: str = "local
             system_prompt=str(agent_raw.get("system_prompt", "You are a helpful lightweight AI agent.")),
         ),
         tools=ToolsConfig(
-            enabled=tuple(enabled_tools or ()),
+            enabled=None if enabled_tools is None else tuple(enabled_tools),
             toolpacks_enabled=tuple(toolpacks_raw.get("enabled", ()) or ()),
             extensions=tuple(tools_raw.get("extensions", ()) or ()),
             allow_danger=bool(tools_raw.get("allow_danger", False)),
